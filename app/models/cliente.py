@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -14,6 +14,7 @@ class Cliente(Base):
     email: Mapped[str] = mapped_column(String(150), nullable=True)
     notas: Mapped[str | None] = mapped_column(Text, nullable=True)
     foto_webp: Mapped[str | None] = mapped_column(Text, nullable=True)
+    activo: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
     comercio: Mapped["Comercio"] = relationship("Comercio", back_populates="clientes")  # noqa: F821
     mascotas: Mapped[list["Mascota"]] = relationship("Mascota", back_populates="cliente")  # noqa: F821

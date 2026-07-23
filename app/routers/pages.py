@@ -19,8 +19,8 @@ templates = Jinja2Templates(directory="app/templates")
 @router.get("/", response_class=HTMLResponse)
 def home(request: Request, db: Session = Depends(get_db)):
     stats = {
-        "clientes": db.query(Cliente).count(),
-        "mascotas": db.query(Mascota).count(),
+        "clientes": db.query(Cliente).filter(Cliente.activo == True).count(),
+        "mascotas": db.query(Mascota).filter(Mascota.activo == True).count(),
         "servicios": db.query(Servicio).count(),
         "atenciones": db.query(AtencionHistorial).count(),
     }
@@ -31,7 +31,7 @@ def home(request: Request, db: Session = Depends(get_db)):
 
 @router.get("/clientes", response_class=HTMLResponse)
 def page_clientes(request: Request, db: Session = Depends(get_db)):
-    clientes = db.query(Cliente).all()
+    clientes = db.query(Cliente).filter(Cliente.activo == True).all()
     return templates.TemplateResponse("clientes/listar.html", {"request": request, "clientes": clientes})
 
 
@@ -42,10 +42,10 @@ def page_cliente_nuevo(request: Request):
 
 @router.get("/clientes/{cliente_id}", response_class=HTMLResponse)
 def page_cliente_detalle(cliente_id: int, request: Request, db: Session = Depends(get_db)):
-    cliente = db.query(Cliente).filter(Cliente.id == cliente_id).first()
+    cliente = db.query(Cliente).filter(Cliente.id == cliente_id, Cliente.activo == True).first()
     if not cliente:
         return RedirectResponse("/page/clientes", status_code=303)
-    mascotas = db.query(Mascota).filter(Mascota.cliente_id == cliente_id).all()
+    mascotas = db.query(Mascota).filter(Mascota.cliente_id == cliente_id, Mascota.activo == True).all()
     mascotas_data = []
     total_gastado = 0.0
     for m in mascotas:
@@ -127,11 +127,20 @@ def actualizar_cliente_form(
     return RedirectResponse("/page/clientes", status_code=303)
 
 
+@router.post("/clientes/{cliente_id}/eliminar")
+def eliminar_cliente_form(cliente_id: int, db: Session = Depends(get_db)):
+    cliente = db.query(Cliente).filter(Cliente.id == cliente_id).first()
+    if cliente:
+        cliente.activo = False
+        db.commit()
+    return RedirectResponse("/page/clientes", status_code=303)
+
+
 # ── Mascotas ──────────────────────────────────────────────
 
 @router.get("/mascotas", response_class=HTMLResponse)
 def page_mascotas(request: Request, db: Session = Depends(get_db)):
-    mascotas_raw = db.query(Mascota).all()
+    mascotas_raw = db.query(Mascota).filter(Mascota.activo == True).all()
     mascotas = []
     for m in mascotas_raw:
         cliente = db.query(Cliente).filter(Cliente.id == m.cliente_id).first()
@@ -145,13 +154,13 @@ def page_mascotas(request: Request, db: Session = Depends(get_db)):
 
 @router.get("/mascotas/nuevo", response_class=HTMLResponse)
 def page_mascota_nuevo(request: Request, db: Session = Depends(get_db)):
-    clientes = db.query(Cliente).all()
+    clientes = db.query(Cliente).filter(Cliente.activo == True).all()
     return templates.TemplateResponse("mascotas/form.html", {"request": request, "mascota": None, "clientes": clientes})
 
 
 @router.get("/mascotas/{mascota_id}", response_class=HTMLResponse)
 def page_mascota_detalle(mascota_id: int, request: Request, db: Session = Depends(get_db)):
-    mascota = db.query(Mascota).filter(Mascota.id == mascota_id).first()
+    mascota = db.query(Mascota).filter(Mascota.id == mascota_id, Mascota.activo == True).first()
     if not mascota:
         return RedirectResponse("/page/mascotas", status_code=303)
     cliente = db.query(Cliente).filter(Cliente.id == mascota.cliente_id).first()
@@ -183,7 +192,7 @@ def page_mascota_detalle(mascota_id: int, request: Request, db: Session = Depend
 @router.get("/mascotas/{mascota_id}/editar", response_class=HTMLResponse)
 def page_mascota_editar(mascota_id: int, request: Request, db: Session = Depends(get_db)):
     mascota = db.query(Mascota).filter(Mascota.id == mascota_id).first()
-    clientes = db.query(Cliente).all()
+    clientes = db.query(Cliente).filter(Cliente.activo == True).all()
     return templates.TemplateResponse("mascotas/form.html", {"request": request, "mascota": mascota, "clientes": clientes})
 
 
@@ -235,6 +244,15 @@ def actualizar_mascota_form(
         mascota.observaciones = observaciones
         mascota.alergias = alergias
         mascota.foto_webp = foto_webp
+        db.commit()
+    return RedirectResponse("/page/mascotas", status_code=303)
+
+
+@router.post("/mascotas/{mascota_id}/eliminar")
+def eliminar_mascota_form(mascota_id: int, db: Session = Depends(get_db)):
+    mascota = db.query(Mascota).filter(Mascota.id == mascota_id).first()
+    if mascota:
+        mascota.activo = False
         db.commit()
     return RedirectResponse("/page/mascotas", status_code=303)
 
@@ -308,7 +326,7 @@ def page_atenciones(request: Request, db: Session = Depends(get_db)):
 
 @router.get("/atenciones/nuevo", response_class=HTMLResponse)
 def page_atencion_nuevo(request: Request, db: Session = Depends(get_db)):
-    mascotas_raw = db.query(Mascota).all()
+    mascotas_raw = db.query(Mascota).filter(Mascota.activo == True).all()
     mascotas = []
     for m in mascotas_raw:
         cliente = db.query(Cliente).filter(Cliente.id == m.cliente_id).first()
@@ -330,7 +348,7 @@ def page_atencion_editar(atencion_id: int, request: Request, db: Session = Depen
             "medio_pago": atencion.medio_pago,
             "foto_antes_webp": atencion.foto_antes_webp, "foto_despues_webp": atencion.foto_despues_webp,
         }
-    mascotas_raw = db.query(Mascota).all()
+    mascotas_raw = db.query(Mascota).filter(Mascota.activo == True).all()
     mascotas = []
     for m in mascotas_raw:
         cliente = db.query(Cliente).filter(Cliente.id == m.cliente_id).first()

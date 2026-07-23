@@ -1,4 +1,4 @@
-from sqlalchemy import Float, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -17,6 +17,7 @@ class Mascota(Base):
     observaciones: Mapped[str | None] = mapped_column(Text, nullable=True)
     alergias: Mapped[str | None] = mapped_column(Text, nullable=True)
     foto_webp: Mapped[str | None] = mapped_column(Text, nullable=True)
+    activo: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
     cliente: Mapped["Cliente"] = relationship("Cliente", back_populates="mascotas")  # noqa: F821
     atenciones: Mapped[list["AtencionHistorial"]] = relationship("AtencionHistorial", back_populates="mascota")  # noqa: F821

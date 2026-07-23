@@ -50,5 +50,5 @@ def eliminar_mascota(mascota_id: int, db: Session = Depends(get_db)):
     mascota = db.query(Mascota).filter(Mascota.id == mascota_id).first()
     if not mascota:
         raise HTTPException(status_code=404, detail="Mascota no encontrada")
-    db.delete(mascota)
+    mascota.activo = False
     db.commit()

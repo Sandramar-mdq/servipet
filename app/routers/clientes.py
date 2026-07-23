@@ -50,5 +50,5 @@ def eliminar_cliente(cliente_id: int, db: Session = Depends(get_db)):
     cliente = db.query(Cliente).filter(Cliente.id == cliente_id).first()
     if not cliente:
         raise HTTPException(status_code=404, detail="Cliente no encontrado")
-    db.delete(cliente)
+    cliente.activo = False
     db.commit()
