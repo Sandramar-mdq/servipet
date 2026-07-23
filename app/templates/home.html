@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Servipet — Inicio{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl font-bold text-gray-800 mb-6">Dashboard</h1>
+
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <a href="/page/clientes" class="bg-white rounded-lg shadow p-6 hover:shadow-md transition block">
+        <div class="text-3xl font-bold text-indigo-600">{{ stats.clientes }}</div>
+        <div class="text-gray-600 mt-1">Clientes</div>
+    </a>
+    <a href="/page/mascotas" class="bg-white rounded-lg shadow p-6 hover:shadow-md transition block">
+        <div class="text-3xl font-bold text-indigo-600">{{ stats.mascotas }}</div>
+        <div class="text-gray-600 mt-1">Mascotas</div>
+    </a>
+    <a href="/page/servicios" class="bg-white rounded-lg shadow p-6 hover:shadow-md transition block">
+        <div class="text-3xl font-bold text-indigo-600">{{ stats.servicios }}</div>
+        <div class="text-gray-600 mt-1">Servicios</div>
+    </a>
+    <a href="/page/atenciones" class="bg-white rounded-lg shadow p-6 hover:shadow-md transition block">
+        <div class="text-3xl font-bold text-indigo-600">{{ stats.atenciones }}</div>
+        <div class="text-gray-600 mt-1">Atenciones</div>
+    </a>
+</div>
+{% endblock %}

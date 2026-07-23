@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Atenciones — Servipet{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold text-gray-800">Atenciones</h1>
+    <a href="/page/atenciones/nuevo" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition text-sm font-medium">+ Nueva Atencion</a>
+</div>
+
+<div class="bg-white rounded-lg shadow overflow-hidden">
+    <table class="w-full text-left">
+        <thead class="bg-gray-50 border-b">
+            <tr>
+                <th class="px-4 py-3 text-sm font-semibold text-gray-600">ID</th>
+                <th class="px-4 py-3 text-sm font-semibold text-gray-600">Fecha</th>
+                <th class="px-4 py-3 text-sm font-semibold text-gray-600">Mascota</th>
+                <th class="px-4 py-3 text-sm font-semibold text-gray-600">Servicio</th>
+                <th class="px-4 py-3 text-sm font-semibold text-gray-600">Monto</th>
+                <th class="px-4 py-3 text-sm font-semibold text-gray-600">Pago</th>
+                <th class="px-4 py-3 text-sm font-semibold text-gray-600 text-right">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for a in atenciones %}
+            <tr class="border-b hover:bg-gray-50">
+                <td class="px-4 py-3 text-sm">{{ a.id }}</td>
+                <td class="px-4 py-3 text-sm">{{ a.fecha }}</td>
+                <td class="px-4 py-3 text-sm font-medium">{{ a.mascota_nombre }}</td>
+                <td class="px-4 py-3 text-sm">{{ a.servicio_nombre }}</td>
+                <td class="px-4 py-3 text-sm">${{ '%.2f' | format(a.monto_cobrado) }}</td>
+                <td class="px-4 py-3 text-sm capitalize">{{ a.medio_pago }}</td>
+                <td class="px-4 py-3 text-sm text-right">
+                    <a href="/page/atenciones/{{ a.id }}/editar" class="text-indigo-600 hover:underline mr-3">Editar</a>
+                    <form method="post" action="/atenciones/{{ a.id }}" class="inline" onsubmit="return confirm('Eliminar atencion?')">
+                        <input type="hidden" name="_method" value="delete">
+                        <button type="submit" class="text-red-600 hover:underline">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+        {% else %}
+            <tr><td colspan="7" class="px-4 py-6 text-center text-gray-400">No hay atenciones registradas.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

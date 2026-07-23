@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Editar' if mascota else 'Nueva' }} Mascota — Servipet{% endblock %}
+
+{% block content %}
+<div class="max-w-xl">
+    <h1 class="text-2xl font-bold text-gray-800 mb-6">{{ 'Editar' if mascota else 'Nueva' }} Mascota</h1>
+
+    <form method="post" action="/page/mascotas{{ '/' ~ mascota.id ~ '/editar' if mascota else '/nuevo' }}" class="bg-white rounded-lg shadow p-6 space-y-4">
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Responsable *</label>
+            <select name="cliente_id" required class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                <option value="">Seleccionar responsable...</option>
+                {% for c in clientes %}
+                <option value="{{ c.id }}" {{ 'selected' if mascota and mascota.cliente_id == c.id }}>{{ c.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
+                <input type="text" name="nombre" value="{{ mascota.nombre if mascota else '' }}" required class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Sexo</label>
+                <select name="sexo" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    <option value="">—</option>
+                    <option value="Macho" {{ 'selected' if mascota and mascota.sexo == 'Macho' }}>Macho</option>
+                    <option value="Hembra" {{ 'selected' if mascota and mascota.sexo == 'Hembra' }}>Hembra</option>
+                </select>
+            </div>
+        </div>
+        <div class="grid grid-cols-3 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Raza</label>
+                <input type="text" name="raza" value="{{ mascota.raza if mascota else '' }}" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Peso (kg)</label>
+                <input type="number" step="0.1" name="peso" value="{{ mascota.peso if mascota and mascota.peso else '' }}" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Edad</label>
+                <input type="number" name="edad" value="{{ mascota.edad if mascota and mascota.edad else '' }}" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+            </div>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Alergias</label>
+            <textarea name="alergias" rows="2" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">{{ mascota.alergias if mascota else '' }}</textarea>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Observaciones</label>
+            <p class="text-xs text-gray-400 mb-1">Detalles medicos, caracter, comportamiento, notas del responsable o contexto familiar.</p>
+            <textarea name="observaciones" rows="4" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">{{ mascota.observaciones if mascota else '' }}</textarea>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Foto (WebP)</label>
+            <input type="file" accept="image/*" id="foto-input" class="w-full border rounded-lg px-3 py-2 text-sm">
+            <input type="hidden" name="foto_webp" id="foto_webp" value="{{ mascota.foto_webp if mascota else '' }}">
+            {% if mascota and mascota.foto_webp %}
+            <img src="data:image/webp;base64,{{ mascota.foto_webp }}" class="mt-2 w-24 h-24 object-cover rounded-lg">
+            {% endif %}
+        </div>
+        <div class="flex gap-3 pt-2">
+            <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition text-sm font-medium">Guardar</button>
+            <a href="/page/mascotas" class="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 transition text-sm font-medium">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/foto.js"></script>
+<script>
+    initFoto('foto-input', 'foto_webp');
+</script>
+{% endblock %}

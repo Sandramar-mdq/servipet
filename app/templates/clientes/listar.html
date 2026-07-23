@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Clientes — Servipet{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold text-gray-800">Clientes</h1>
+    <a href="/page/clientes/nuevo" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition text-sm font-medium">+ Nuevo Cliente</a>
+</div>
+
+<div class="bg-white rounded-lg shadow overflow-hidden">
+    <table class="w-full text-left">
+        <thead class="bg-gray-50 border-b">
+            <tr>
+                <th class="px-4 py-3 text-sm font-semibold text-gray-600">ID</th>
+                <th class="px-4 py-3 text-sm font-semibold text-gray-600">Nombre</th>
+                <th class="px-4 py-3 text-sm font-semibold text-gray-600">Telefono</th>
+                <th class="px-4 py-3 text-sm font-semibold text-gray-600">Email</th>
+                <th class="px-4 py-3 text-sm font-semibold text-gray-600">Mascotas</th>
+                <th class="px-4 py-3 text-sm font-semibold text-gray-600 text-right">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for c in clientes %}
+            <tr class="border-b hover:bg-gray-50">
+                <td class="px-4 py-3 text-sm">{{ c.id }}</td>
+                <td class="px-4 py-3 text-sm font-medium">{{ c.nombre }}</td>
+                <td class="px-4 py-3 text-sm">{{ c.telefono or '—' }}</td>
+                <td class="px-4 py-3 text-sm">{{ c.email or '—' }}</td>
+                <td class="px-4 py-3 text-sm">{{ c.mascotas | length }}</td>
+                <td class="px-4 py-3 text-sm text-right">
+                    <a href="/page/clientes/{{ c.id }}/editar" class="text-indigo-600 hover:underline mr-3">Editar</a>
+                    <form method="post" action="/clientes/{{ c.id }}" class="inline" onsubmit="return confirm('Eliminar cliente?')">
+                        <input type="hidden" name="_method" value="delete">
+                        <button type="submit" class="text-red-600 hover:underline">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+        {% else %}
+            <tr><td colspan="6" class="px-4 py-6 text-center text-gray-400">No hay clientes registrados.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

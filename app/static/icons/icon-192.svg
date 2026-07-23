@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <rect width="192" height="192" rx="32" fill="#4f46e5"/>
+  <text x="96" y="115" font-family="Arial,Helvetica,sans-serif" font-size="72" font-weight="bold" fill="#ffffff" text-anchor="middle">SP</text>
+  <circle cx="60" cy="55" r="12" fill="#a5b4fc"/>
+  <circle cx="132" cy="55" r="12" fill="#a5b4fc"/>
+  <circle cx="50" cy="75" r="8" fill="#c7d2fe"/>
+  <circle cx="142" cy="75" r="8" fill="#c7d2fe"/>
+</svg>

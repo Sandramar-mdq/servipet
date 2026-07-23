@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Mascotas — Servipet{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold text-gray-800">Mascotas</h1>
+    <a href="/page/mascotas/nuevo" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition text-sm font-medium">+ Nueva Mascota</a>
+</div>
+
+<div class="bg-white rounded-lg shadow overflow-hidden">
+    <table class="w-full text-left">
+        <thead class="bg-gray-50 border-b">
+            <tr>
+                <th class="px-4 py-3 text-sm font-semibold text-gray-600">ID</th>
+                <th class="px-4 py-3 text-sm font-semibold text-gray-600">Nombre</th>
+                <th class="px-4 py-3 text-sm font-semibold text-gray-600">Raza</th>
+                <th class="px-4 py-3 text-sm font-semibold text-gray-600">Responsable</th>
+                <th class="px-4 py-3 text-sm font-semibold text-gray-600"> Sexo</th>
+                <th class="px-4 py-3 text-sm font-semibold text-gray-600 text-right">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for m in mascotas %}
+            <tr class="border-b hover:bg-gray-50">
+                <td class="px-4 py-3 text-sm">{{ m.id }}</td>
+                <td class="px-4 py-3 text-sm font-medium">
+                    <a href="/page/mascotas/{{ m.id }}" class="text-indigo-600 hover:underline">{{ m.nombre }}</a>
+                </td>
+                <td class="px-4 py-3 text-sm">{{ m.raza or '—' }}</td>
+                <td class="px-4 py-3 text-sm">{{ m.cliente_nombre }}</td>
+                <td class="px-4 py-3 text-sm">{{ m.sexo or '—' }}</td>
+                <td class="px-4 py-3 text-sm text-right">
+                    <a href="/page/mascotas/{{ m.id }}" class="text-indigo-600 hover:underline mr-3">Ver Ficha</a>
+                    <a href="/page/mascotas/{{ m.id }}/editar" class="text-indigo-600 hover:underline mr-3">Editar</a>
+                    <form method="post" action="/mascotas/{{ m.id }}" class="inline" onsubmit="return confirm('Eliminar mascota?')">
+                        <input type="hidden" name="_method" value="delete">
+                        <button type="submit" class="text-red-600 hover:underline">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+        {% else %}
+            <tr><td colspan="6" class="px-4 py-6 text-center text-gray-400">No hay mascotas registradas.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
