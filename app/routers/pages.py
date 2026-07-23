@@ -40,6 +40,47 @@ def page_cliente_nuevo(request: Request):
     return templates.TemplateResponse("clientes/form.html", {"request": request, "cliente": None})
 
 
+@router.get("/clientes/{cliente_id}", response_class=HTMLResponse)
+def page_cliente_detalle(cliente_id: int, request: Request, db: Session = Depends(get_db)):
+    cliente = db.query(Cliente).filter(Cliente.id == cliente_id).first()
+    if not cliente:
+        return RedirectResponse("/page/clientes", status_code=303)
+    mascotas = db.query(Mascota).filter(Mascota.cliente_id == cliente_id).all()
+    mascotas_data = []
+    total_gastado = 0.0
+    for m in mascotas:
+        atenciones_m = (
+            db.query(AtencionHistorial)
+            .filter(AtencionHistorial.mascota_id == m.id)
+            .order_by(AtencionHistorial.fecha.desc())
+            .all()
+        )
+        subtotal = sum(a.monto_cobrado for a in atenciones_m)
+        total_gastado += subtotal
+        ultima_atencion = atenciones_m[0] if atenciones_m else None
+        mascotas_data.append({
+            "id": m.id,
+            "nombre": m.nombre,
+            "raza": m.raza,
+            "sexo": m.sexo,
+            "peso": m.peso,
+            "edad": m.edad,
+            "foto_webp": m.foto_webp,
+            "total_atenciones": len(atenciones_m),
+            "total_gastado": subtotal,
+            "ultima_fecha": (
+                ultima_atencion.fecha.strftime("%d/%m/%Y") if ultima_atencion and ultima_atencion.fecha else "—"
+            ),
+        })
+    return templates.TemplateResponse("clientes/detalle.html", {
+        "request": request,
+        "cliente": cliente,
+        "mascotas": mascotas_data,
+        "total_gastado": total_gastado,
+        "total_mascotas": len(mascotas),
+    })
+
+
 @router.get("/clientes/{cliente_id}/editar", response_class=HTMLResponse)
 def page_cliente_editar(cliente_id: int, request: Request, db: Session = Depends(get_db)):
     cliente = db.query(Cliente).filter(Cliente.id == cliente_id).first()

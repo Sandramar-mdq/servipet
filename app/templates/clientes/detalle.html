@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}{{ cliente.nombre }} — Ficha Cliente — Servipet{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">Ficha de {{ cliente.nombre }}</h1>
+        <div class="flex gap-3">
+            <a href="/page/clientes/{{ cliente.id }}/editar" class="bg-indigo-600 text-white px-4 py-2 rounded-xl hover:bg-indigo-700 transition text-sm font-medium shadow-md">Editar</a>
+            <a href="/page/clientes" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-xl hover:bg-gray-300 transition text-sm font-medium">Volver</a>
+        </div>
+    </div>
+
+    <!-- Datos del cliente -->
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-gray-100">
+        {% if cliente.foto_webp %}
+        <div class="mb-4">
+            <img src="data:image/webp;base64,{{ cliente.foto_webp }}" alt="{{ cliente.nombre }}" class="w-28 h-28 object-cover rounded-2xl shadow-md border-2 border-indigo-100">
+        </div>
+        {% endif %}
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+            <div>
+                <span class="text-gray-400 block text-xs uppercase tracking-wide mb-1">Nombre</span>
+                <span class="font-semibold text-gray-800 text-base">{{ cliente.nombre }}</span>
+            </div>
+            <div>
+                <span class="text-gray-400 block text-xs uppercase tracking-wide mb-1">Telefono</span>
+                <span class="font-medium text-gray-800">{{ cliente.telefono or '—' }}</span>
+            </div>
+            <div>
+                <span class="text-gray-400 block text-xs uppercase tracking-wide mb-1">Email</span>
+                <span class="font-medium text-gray-800">{{ cliente.email or '—' }}</span>
+            </div>
+            <div>
+                <span class="text-gray-400 block text-xs uppercase tracking-wide mb-1">Mascotas</span>
+                <span class="inline-block bg-indigo-100 text-indigo-700 text-xs font-bold px-2.5 py-1 rounded-full">{{ total_mascotas }}</span>
+            </div>
+        </div>
+
+        {% if cliente.notas %}
+        <div class="mt-4 pt-4 border-t border-gray-100">
+            <span class="text-gray-400 text-xs uppercase tracking-wide block mb-1">Notas</span>
+            <p class="text-sm text-gray-700 whitespace-pre-line">{{ cliente.notas }}</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Resumen de gastos -->
+    <div class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl shadow-lg p-6 mb-6 text-white">
+        <div class="flex items-center justify-between">
+            <div>
+                <span class="text-indigo-100 text-xs uppercase tracking-wide">Total gastado</span>
+                <p class="text-3xl font-bold mt-1">${{ '%.2f' | format(total_gastado) }}</p>
+            </div>
+            <div class="text-right">
+                <span class="text-indigo-100 text-xs uppercase tracking-wide">Servicios totales</span>
+                <p class="text-2xl font-bold mt-1">{{ mascotas | sum(attribute='total_atenciones') }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mascotas -->
+    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100">
+            <h2 class="text-lg font-bold text-gray-800">Mascotas Registradas</h2>
+        </div>
+        {% if mascotas %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-6">
+            {% for m in mascotas %}
+            <a href="/page/mascotas/{{ m.id }}" class="block bg-gray-50 hover:bg-indigo-50 rounded-xl p-4 transition border border-gray-100 hover:border-indigo-200 hover:shadow-md">
+                <div class="flex items-start gap-3">
+                    {% if m.foto_webp %}
+                    <img src="data:image/webp;base64,{{ m.foto_webp }}" alt="{{ m.nombre }}" class="w-14 h-14 object-cover rounded-xl shadow-sm flex-shrink-0">
+                    {% else %}
+                    <div class="w-14 h-14 bg-indigo-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <span class="text-xl">&#128062;</span>
+                    </div>
+                    {% endif %}
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center gap-2">
+                            <h3 class="font-bold text-gray-800 truncate">{{ m.nombre }}</h3>
+                            {% if m.sexo %}
+                            <span class="text-xs font-bold px-2 py-0.5 rounded-full {% if m.sexo == 'Macho' %}bg-blue-100 text-blue-700{% elif m.sexo == 'Hembra' %}bg-pink-100 text-pink-700{% else %}bg-gray-100 text-gray-600{% endif %}">{{ m.sexo }}</span>
+                            {% endif %}
+                        </div>
+                        <p class="text-xs text-gray-500 mt-0.5">{{ m.raza or 'Sin raza' }}</p>
+                        <div class="flex items-center gap-3 mt-2 text-xs text-gray-500">
+                            <span>{{ m.total_atenciones }} servicios</span>
+                            <span class="text-green-600 font-semibold">${{ '%.2f' | format(m.total_gastado) }}</span>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1">Ultima visita: {{ m.ultima_fecha }}</p>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="px-6 py-8 text-center text-gray-400 text-sm">
+            No hay mascotas registradas para este cliente.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
