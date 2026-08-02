@@ -20,8 +20,6 @@
 
 ---
 # SERVIPET 
-*(O el nombre/título que tengas en la línea 1)*
-
 > 📦 **¿Querés probar la versión portable sin instalar nada?**  
 > Descargá el ZIP listo para usar y el manual desde la sección de [**Releases / Versiones**](https://github.com/Sandramar-mdq/servipet/releases).
 
