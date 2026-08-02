@@ -19,6 +19,15 @@
 **Servipet** es una aplicación web local diseñada para veterinarias, peluquerías caninas y comercios de mascotas. Permite gestionar clientes, mascotas, servicios y el historial de atenciones de forma rápida e intuitiva, con interfaz responsive optimizada para uso en celular y escritorio.
 
 ---
+# SERVIPET 
+*(O el nombre/título que tengas en la línea 1)*
+
+> 📦 **¿Querés probar la versión portable sin instalar nada?**  
+> Descargá el ZIP listo para usar y el manual desde la sección de [**Releases / Versiones**](https://github.com/Sandramar-mdq/servipet/releases).
+
+---
+
+*(A partir de acá hacés un Enter y sigue TODO tu README original exactamente como lo tenías, sin borrar ni tocar nada más)*
 
 ## ✨ Características principales
 
