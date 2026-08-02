@@ -20,12 +20,10 @@
 
 ---
 
-> 📦 **¿Querés probar la versión portable sin instalar nada?**  
-> Descargá el ZIP listo para usar y el manual desde la sección de [**Releases / Versiones**](https://github.com/Sandramar-mdq/servipet/releases).
+## 📦 **¿Querés probar la versión portable sin instalar nada?**  
+ Descargá el ZIP listo para usar y el manual desde la sección de [**Releases / Versiones**](https://github.com/Sandramar-mdq/servipet/releases).
 
 ---
-
-*(A partir de acá hacés un Enter y sigue TODO tu README original exactamente como lo tenías, sin borrar ni tocar nada más)*
 
 ## ✨ Características principales
 
