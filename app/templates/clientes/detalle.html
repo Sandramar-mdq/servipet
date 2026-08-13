@@ -84,7 +84,7 @@
                             <span class="text-xs font-bold px-2 py-0.5 rounded-full {% if m.sexo == 'Macho' %}bg-blue-100 text-blue-700{% elif m.sexo == 'Hembra' %}bg-pink-100 text-pink-700{% else %}bg-gray-100 text-gray-600{% endif %}">{{ m.sexo }}</span>
                             {% endif %}
                         </div>
-                        <p class="text-xs text-gray-500 mt-0.5">{{ m.raza or 'Sin raza' }}</p>
+                        <p class="text-xs text-gray-500 mt-0.5">{{ m.especie or '' }}{{ ' &middot; ' if m.especie and m.raza else '' }}{{ m.raza or '' }}</p>
                         <div class="flex items-center gap-3 mt-2 text-xs text-gray-500">
                             <span>{{ m.total_atenciones }} servicios</span>
                             <span class="text-green-600 font-semibold">${{ '%.2f' | format(m.total_gastado) }}</span>

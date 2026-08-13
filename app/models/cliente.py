@@ -18,3 +18,4 @@ class Cliente(Base):
 
     comercio: Mapped["Comercio"] = relationship("Comercio", back_populates="clientes")  # noqa: F821
     mascotas: Mapped[list["Mascota"]] = relationship("Mascota", back_populates="cliente")  # noqa: F821
+    turnos: Mapped[list["Turno"]] = relationship("Turno", back_populates="cliente")  # noqa: F821

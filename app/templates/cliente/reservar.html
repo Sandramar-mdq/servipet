@@ -1,0 +1,199 @@
+{% extends "cliente/base_client.html" %}
+{% block title %}Reservar Turno — Servipet{% endblock %}
+
+{% block content %}
+<h1 class="text-xl font-bold text-gray-800 mb-4">Reservar turno</h1>
+
+{% if error %}
+<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-2xl text-sm mb-4">
+    {{ error }}
+</div>
+{% endif %}
+
+<!-- Step indicator -->
+<div class="flex items-center justify-center gap-1 mb-6">
+    <div id="ind-1" class="flex items-center gap-1">
+        <span class="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center text-sm font-bold">1</span>
+        <span class="text-xs font-semibold text-gray-700">Mascota</span>
+    </div>
+    <div class="w-8 h-0.5 bg-gray-300 mx-1" id="line-1"></div>
+    <div id="ind-2" class="flex items-center gap-1">
+        <span class="w-8 h-8 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center text-sm font-bold">2</span>
+        <span class="text-xs font-medium text-gray-400">Servicio</span>
+    </div>
+    <div class="w-8 h-0.5 bg-gray-300 mx-1" id="line-2"></div>
+    <div id="ind-3" class="flex items-center gap-1">
+        <span class="w-8 h-8 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center text-sm font-bold">3</span>
+        <span class="text-xs font-medium text-gray-400">Horario</span>
+    </div>
+</div>
+
+<form method="post" action="/cliente/reservar" id="reserva-form">
+    <input type="hidden" name="mascota_id" id="h-mascota">
+    <input type="hidden" name="servicio_id" id="h-servicio">
+    <input type="hidden" name="fecha" id="h-fecha">
+    <input type="hidden" name="hora" id="h-hora">
+
+    <!-- Paso 1: Mascota -->
+    <section id="step-1" class="step space-y-3">
+        {% if mascotas %}
+        {% for m in mascotas %}
+        <label class="block">
+            <input type="radio" name="mascota_picker" value="{{ m.id }}" class="peer sr-only" onchange="selectMascota(this)">
+            <div class="bg-white rounded-2xl shadow border-2 border-gray-100 peer-checked:border-indigo-500 peer-checked:bg-indigo-50 p-4 flex items-center gap-3 transition">
+                <div class="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center text-xl font-bold text-indigo-600 shrink-0">{{ m.nombre[:1]|upper }}</div>
+                <div>
+                    <p class="font-bold text-gray-800">{{ m.nombre }}</p>
+                    <p class="text-sm text-gray-500">{{ m.especie or '' }}{{ ' &middot; ' if m.especie and m.raza else '' }}{{ m.raza or '' }}</p>
+                </div>
+            </div>
+        </label>
+        {% endfor %}
+        <button type="button" id="btn-step2" disabled class="w-full bg-indigo-600 text-white px-4 py-3 rounded-2xl font-semibold shadow-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-indigo-700 transition" onclick="showStep(2)">Continuar</button>
+        {% else %}
+        <div class="bg-white rounded-2xl shadow border border-gray-100 px-5 py-8 text-center">
+            <p class="text-gray-400 text-sm">No tenes mascotas registradas. Agrega una para poder reservar.</p>
+        </div>
+        {% endif %}
+    </section>
+
+    <!-- Paso 2: Servicio -->
+    <section id="step-2" class="step hidden space-y-3">
+        {% for s in servicios %}
+        <label class="block">
+            <input type="radio" name="servicio_picker" value="{{ s.id }}" class="peer sr-only" onchange="selectServicio(this)">
+            <div class="bg-white rounded-2xl shadow border-2 border-gray-100 peer-checked:border-indigo-500 peer-checked:bg-indigo-50 p-4 transition">
+                <div class="flex items-center justify-between">
+                    <p class="font-bold text-gray-800">{{ s.nombre }}</p>
+                    <span class="text-sm font-bold text-green-600">${{ '%.2f' | format(s.precio_base) }}</span>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">
+                    <span class="inline-block bg-indigo-100 text-indigo-700 text-xs font-bold px-2 py-0.5 rounded-full">{{ s.duracion_minutos }} min</span>
+                    {% if s.descripcion %} &middot; {{ s.descripcion }}{% endif %}
+                </p>
+            </div>
+        </label>
+        {% else %}
+        <div class="bg-white rounded-2xl shadow border border-gray-100 px-5 py-8 text-center">
+            <p class="text-gray-400 text-sm">Todavia no hay servicios disponibles.</p>
+        </div>
+        {% endfor %}
+        <div class="flex gap-3">
+            <button type="button" class="flex-1 bg-gray-200 text-gray-700 px-4 py-3 rounded-2xl font-semibold hover:bg-gray-300 transition" onclick="showStep(1)">Volver</button>
+            <button type="button" id="btn-step3" disabled class="flex-1 bg-indigo-600 text-white px-4 py-3 rounded-2xl font-semibold shadow-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-indigo-700 transition" onclick="showStep(3)">Continuar</button>
+        </div>
+    </section>
+
+    <!-- Paso 3: Horario -->
+    <section id="step-3" class="step hidden space-y-4">
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
+            <input type="date" id="fecha-input" min="{{ today }}" onchange="cargarSlots()"
+                class="w-full border rounded-2xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Horarios disponibles</label>
+            <div id="slots-loading" class="hidden text-sm text-gray-400">Buscando horarios...</div>
+            <div id="slots-error" class="hidden bg-red-50 text-red-600 text-sm rounded-2xl px-3 py-2"></div>
+            <div id="slots-grid" class="grid grid-cols-3 gap-2"></div>
+            <p id="slots-empty" class="hidden text-sm text-gray-400 text-center py-4">No hay horarios disponibles para esta fecha.</p>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Observaciones (opcional)</label>
+            <textarea name="observaciones" rows="2" placeholder="Ej: tiene pulgas, alergia a..."
+                class="w-full border rounded-2xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
+        </div>
+        <div class="flex gap-3">
+            <button type="button" class="flex-1 bg-gray-200 text-gray-700 px-4 py-3 rounded-2xl font-semibold hover:bg-gray-300 transition" onclick="showStep(2)">Volver</button>
+            <button type="submit" id="btn-confirmar" disabled class="flex-1 bg-green-600 text-white px-4 py-3 rounded-2xl font-semibold shadow-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-green-700 transition">Confirmar reserva</button>
+        </div>
+    </section>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    var pasos = { 1: 'step-1', 2: 'step-2', 3: 'step-3' };
+    var servicioSeleccionado = null;
+    var slotSeleccionado = null;
+
+    function showStep(n) {
+        Object.keys(pasos).forEach(function(k) {
+            document.getElementById(pasos[k]).classList.toggle('hidden', Number(k) !== n);
+        });
+        [1, 2, 3].forEach(function(i) {
+            var ind = document.getElementById('ind-' + i);
+            var bolita = ind.querySelector('span');
+            var active = i <= n;
+            bolita.className = 'w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ' +
+                (active ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-500');
+            ind.querySelectorAll('span')[1].className = 'text-xs ' + (active ? 'font-semibold text-gray-700' : 'font-medium text-gray-400');
+        });
+        if (n >= 2) document.getElementById('line-1').className = 'w-8 h-0.5 bg-indigo-400 mx-1';
+        if (n >= 3) document.getElementById('line-2').className = 'w-8 h-0.5 bg-indigo-400 mx-1';
+    }
+
+    function selectMascota(input) {
+        document.getElementById('h-mascota').value = input.value;
+        document.getElementById('btn-step2').disabled = false;
+    }
+
+    function selectServicio(input) {
+        servicioSeleccionado = input.value;
+        document.getElementById('h-servicio').value = input.value;
+        document.getElementById('btn-step3').disabled = false;
+    }
+
+    function cargarSlots() {
+        var fecha = document.getElementById('fecha-input').value;
+        var grid = document.getElementById('slots-grid');
+        var errorBox = document.getElementById('slots-error');
+        var empty = document.getElementById('slots-empty');
+        var loading = document.getElementById('slots-loading');
+        if (!fecha || !servicioSeleccionado) return;
+        document.getElementById('h-fecha').value = fecha;
+        document.getElementById('h-hora').value = '';
+        slotSeleccionado = null;
+        document.getElementById('btn-confirmar').disabled = true;
+        grid.innerHTML = '';
+        empty.classList.add('hidden');
+        errorBox.classList.add('hidden');
+        loading.classList.remove('hidden');
+        fetch('/api/client/slots-disponibles?fecha=' + fecha + '&servicio_id=' + servicioSeleccionado)
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                loading.classList.add('hidden');
+                if (data.error) {
+                    errorBox.textContent = data.error;
+                    errorBox.classList.remove('hidden');
+                    return;
+                }
+                if (!data.slots || data.slots.length === 0) {
+                    empty.classList.remove('hidden');
+                    return;
+                }
+                data.slots.forEach(function(slot) {
+                    var b = document.createElement('button');
+                    b.type = 'button';
+                    b.textContent = slot;
+                    b.className = 'py-2.5 rounded-xl border-2 border-gray-200 text-sm font-semibold text-gray-700 hover:border-indigo-400 transition';
+                    b.onclick = function() {
+                        grid.querySelectorAll('button').forEach(function(x) {
+                            x.className = 'py-2.5 rounded-xl border-2 border-gray-200 text-sm font-semibold text-gray-700 hover:border-indigo-400 transition';
+                        });
+                        b.className = 'py-2.5 rounded-xl border-2 border-indigo-500 bg-indigo-50 text-indigo-700 text-sm font-bold transition';
+                        document.getElementById('h-hora').value = slot;
+                        slotSeleccionado = slot;
+                        document.getElementById('btn-confirmar').disabled = false;
+                    };
+                    grid.appendChild(b);
+                });
+            })
+            .catch(function() {
+                loading.classList.add('hidden');
+                errorBox.textContent = 'Error al consultar los horarios. Intenta de nuevo.';
+                errorBox.classList.remove('hidden');
+            });
+    }
+</script>
+{% endblock %}

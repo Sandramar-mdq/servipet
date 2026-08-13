@@ -4,6 +4,7 @@ from pydantic import BaseModel
 class MascotaCreate(BaseModel):
     cliente_id: int
     nombre: str
+    especie: str | None = None
     raza: str | None = None
     peso: float | None = None
     edad: int | None = None
@@ -15,6 +16,7 @@ class MascotaCreate(BaseModel):
 
 class MascotaUpdate(BaseModel):
     nombre: str | None = None
+    especie: str | None = None
     raza: str | None = None
     peso: float | None = None
     edad: int | None = None
@@ -28,6 +30,7 @@ class MascotaResponse(BaseModel):
     id: int
     cliente_id: int
     nombre: str
+    especie: str | None = None
     raza: str | None = None
     peso: float | None = None
     edad: int | None = None

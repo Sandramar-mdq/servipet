@@ -1,0 +1,65 @@
+{% extends "cliente/base_client.html" %}
+{% block title %}Mis Turnos — Servipet{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+    <h1 class="text-xl font-bold text-gray-800">Mis Turnos</h1>
+    <a href="/cliente/reservar" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-lg hover:bg-indigo-700 transition">+ Reservar</a>
+</div>
+
+{% if success %}
+<div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-2xl text-sm mb-4">
+    {{ success }}
+</div>
+{% endif %}
+
+{% set badges = {
+    'Pendiente': 'bg-amber-100 text-amber-700',
+    'Confirmado': 'bg-emerald-100 text-emerald-700',
+    'Cancelado': 'bg-red-100 text-red-700',
+    'Finalizado': 'bg-gray-100 text-gray-600'
+} %}
+
+{% if proximos %}
+<h2 class="text-sm font-bold text-gray-500 uppercase tracking-wide mb-3">Proximos</h2>
+<div class="space-y-3 mb-6">
+    {% for t in proximos %}
+    <a href="/cliente/turnos/{{ t.id }}" class="block bg-white rounded-2xl shadow border border-gray-100 p-4 hover:border-indigo-200 transition">
+        <div class="flex items-center justify-between gap-3">
+            <div>
+                <p class="text-base font-bold text-gray-800">{{ t.mascota.nombre }}</p>
+                <p class="text-sm text-gray-500">{{ t.servicio.nombre }}</p>
+            </div>
+            <span class="text-xs font-bold px-2.5 py-1 rounded-full {{ badges.get(t.estado, 'bg-gray-100 text-gray-600') }}">{{ t.estado }}</span>
+        </div>
+        <p class="text-sm font-semibold text-indigo-600 mt-2">{{ t.fecha_hora.strftime('%d/%m/%Y %H:%M') }}</p>
+    </a>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if anteriores %}
+<h2 class="text-sm font-bold text-gray-500 uppercase tracking-wide mb-3">Anteriores</h2>
+<div class="space-y-3">
+    {% for t in anteriores %}
+    <a href="/cliente/turnos/{{ t.id }}" class="block bg-white rounded-2xl shadow border border-gray-100 p-4 hover:border-indigo-200 transition opacity-80">
+        <div class="flex items-center justify-between gap-3">
+            <div>
+                <p class="text-base font-bold text-gray-800">{{ t.mascota.nombre }}</p>
+                <p class="text-sm text-gray-500">{{ t.servicio.nombre }}</p>
+            </div>
+            <span class="text-xs font-bold px-2.5 py-1 rounded-full {{ badges.get(t.estado, 'bg-gray-100 text-gray-600') }}">{{ t.estado }}</span>
+        </div>
+        <p class="text-sm text-gray-500 mt-2">{{ t.fecha_hora.strftime('%d/%m/%Y %H:%M') }}</p>
+    </a>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if not proximos and not anteriores %}
+<div class="bg-white rounded-2xl shadow border border-gray-100 px-5 py-12 text-center">
+    <p class="text-gray-400 text-sm">Todavia no tenes turnos reservados.</p>
+    <a href="/cliente/reservar" class="inline-block mt-3 bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-indigo-700 transition">Reservar el primero</a>
+</div>
+{% endif %}
+{% endblock %}

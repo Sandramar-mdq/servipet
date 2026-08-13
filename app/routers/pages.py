@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime, time
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Form, Request
@@ -11,6 +11,7 @@ from app.models.cliente import Cliente
 from app.models.mascota import Mascota
 from app.models.servicio import Servicio
 from app.models.atencion import AtencionHistorial
+from app.models.turno import Turno
 
 router = APIRouter(prefix="/page", tags=["Pages"])
 templates = Jinja2Templates(directory="app/templates")
@@ -18,11 +19,18 @@ templates = Jinja2Templates(directory="app/templates")
 
 @router.get("/", response_class=HTMLResponse)
 def home(request: Request, db: Session = Depends(get_db)):
+    hoy_inicio = datetime.combine(date.today(), time.min)
+    hoy_fin = datetime.combine(date.today(), time.max)
     stats = {
         "clientes": db.query(Cliente).filter(Cliente.activo == True).count(),
         "mascotas": db.query(Mascota).filter(Mascota.activo == True).count(),
         "servicios": db.query(Servicio).count(),
         "atenciones": db.query(AtencionHistorial).count(),
+        "turnos_pendientes_hoy": (
+            db.query(Turno)
+            .filter(Turno.estado == "Pendiente", Turno.fecha_hora >= hoy_inicio, Turno.fecha_hora <= hoy_fin)
+            .count()
+        ),
     }
     return templates.TemplateResponse("home.html", {"request": request, "stats": stats})
 
@@ -61,6 +69,7 @@ def page_cliente_detalle(cliente_id: int, request: Request, db: Session = Depend
         mascotas_data.append({
             "id": m.id,
             "nombre": m.nombre,
+            "especie": m.especie,
             "raza": m.raza,
             "sexo": m.sexo,
             "peso": m.peso,
@@ -145,7 +154,7 @@ def page_mascotas(request: Request, db: Session = Depends(get_db)):
     for m in mascotas_raw:
         cliente = db.query(Cliente).filter(Cliente.id == m.cliente_id).first()
         mascotas.append({
-            "id": m.id, "nombre": m.nombre, "raza": m.raza,
+            "id": m.id, "nombre": m.nombre, "especie": m.especie, "raza": m.raza,
             "sexo": m.sexo, "cliente_id": m.cliente_id,
             "cliente_nombre": cliente.nombre if cliente else "—",
         })
@@ -200,6 +209,7 @@ def page_mascota_editar(mascota_id: int, request: Request, db: Session = Depends
 def crear_mascota_form(
     cliente_id: int = Form(...),
     nombre: str = Form(...),
+    especie: Optional[str] = Form(None),
     raza: Optional[str] = Form(None),
     peso: Optional[str] = Form(None),
     edad: Optional[str] = Form(None),
@@ -211,7 +221,7 @@ def crear_mascota_form(
 ):
     mascota = Mascota(
         cliente_id=cliente_id, nombre=nombre,
-        raza=raza, peso=float(peso) if peso else None,
+        especie=especie, raza=raza, peso=float(peso) if peso else None,
         edad=int(edad) if edad else None, sexo=sexo,
         observaciones=observaciones, alergias=alergias,
         foto_webp=foto_webp,
@@ -225,6 +235,7 @@ def crear_mascota_form(
 def actualizar_mascota_form(
     mascota_id: int,
     nombre: str = Form(...),
+    especie: Optional[str] = Form(None),
     raza: Optional[str] = Form(None),
     peso: Optional[str] = Form(None),
     edad: Optional[str] = Form(None),
@@ -237,6 +248,7 @@ def actualizar_mascota_form(
     mascota = db.query(Mascota).filter(Mascota.id == mascota_id).first()
     if mascota:
         mascota.nombre = nombre
+        mascota.especie = especie
         mascota.raza = raza
         mascota.peso = float(peso) if peso else None
         mascota.edad = int(edad) if edad else None
@@ -281,9 +293,10 @@ def crear_servicio_form(
     nombre: str = Form(...),
     descripcion: Optional[str] = Form(None),
     precio_base: float = Form(0.0),
+    duracion_minutos: int = Form(30),
     db: Session = Depends(get_db),
 ):
-    servicio = Servicio(nombre=nombre, descripcion=descripcion, precio_base=precio_base)
+    servicio = Servicio(nombre=nombre, descripcion=descripcion, precio_base=precio_base, duracion_minutos=duracion_minutos)
     db.add(servicio)
     db.commit()
     return RedirectResponse("/page/servicios", status_code=303)
@@ -295,6 +308,7 @@ def actualizar_servicio_form(
     nombre: str = Form(...),
     descripcion: Optional[str] = Form(None),
     precio_base: float = Form(0.0),
+    duracion_minutos: int = Form(30),
     db: Session = Depends(get_db),
 ):
     servicio = db.query(Servicio).filter(Servicio.id == servicio_id).first()
@@ -302,6 +316,7 @@ def actualizar_servicio_form(
         servicio.nombre = nombre
         servicio.descripcion = descripcion
         servicio.precio_base = precio_base
+        servicio.duracion_minutos = duracion_minutos
         db.commit()
     return RedirectResponse("/page/servicios", status_code=303)
 

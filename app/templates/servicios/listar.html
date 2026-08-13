@@ -20,6 +20,7 @@
                 <th class="px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide">ID</th>
                 <th class="px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide">Nombre</th>
                 <th class="px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide">Descripcion</th>
+                <th class="px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide">Duracion</th>
                 <th class="px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide">Precio Base</th>
                 <th class="px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide text-right">Acciones</th>
             </tr>
@@ -30,6 +31,9 @@
                 <td class="px-4 py-3 text-sm text-gray-500">{{ s.id }}</td>
                 <td class="px-4 py-3 text-sm font-semibold text-gray-800">{{ s.nombre }}</td>
                 <td class="px-4 py-3 text-sm text-gray-600">{{ s.descripcion or '—' }}</td>
+                <td class="px-4 py-3 text-sm">
+                    <span class="inline-block bg-indigo-100 text-indigo-700 text-xs font-bold px-2.5 py-0.5 rounded-full">{{ s.duracion_minutos }} min</span>
+                </td>
                 <td class="px-4 py-3 text-sm">
                     <span class="inline-block bg-green-100 text-green-700 text-xs font-bold px-2.5 py-0.5 rounded-full">${{ '%.2f' | format(s.precio_base) }}</span>
                 </td>
@@ -42,7 +46,7 @@
                 </td>
             </tr>
         {% else %}
-            <tr><td colspan="5" class="px-4 py-6 text-center text-gray-400 text-sm">No hay servicios registrados.</td></tr>
+            <tr><td colspan="6" class="px-4 py-6 text-center text-gray-400 text-sm">No hay servicios registrados.</td></tr>
         {% endfor %}
         </tbody>
     </table>

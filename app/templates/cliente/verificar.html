@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificar codigo — Servipet</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-sm">
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <div class="bg-indigo-600 text-white px-6 py-5 text-center">
+                <h1 class="text-xl font-bold">Verificar codigo</h1>
+                <p class="text-sm text-indigo-200 mt-1">Ingresamos un codigo de 6 digitos a {{ telefono }}</p>
+            </div>
+            <form method="post" action="/cliente/verificar" class="p-6 space-y-4">
+                <input type="hidden" name="telefono" value="{{ telefono }}">
+                {% if error %}
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded text-sm">
+                    {{ error }}
+                </div>
+                {% endif %}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Codigo de 6 digitos</label>
+                    <input type="text" name="codigo" required pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" autofocus class="w-full border rounded-lg px-3 py-2 text-sm text-center text-lg tracking-widest focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="000000">
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition text-sm font-medium">
+                    Verificar
+                </button>
+                <a href="/cliente/login" class="block text-center text-sm text-indigo-600 hover:underline">Cambiar telefono</a>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

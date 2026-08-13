@@ -1,0 +1,4 @@
+# Dependencias extra SOLO para despliegues con Turso (SQLite persistente).
+# El dialecto sqlalchemy-libsql es experimental y actualmente solo Linux/macOS.
+# NO instalar en desarrollo local (Windows).
+sqlalchemy-libsql

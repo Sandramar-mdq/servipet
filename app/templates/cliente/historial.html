@@ -1,0 +1,36 @@
+{% extends "cliente/base_client.html" %}
+{% block title %}Historial — Servipet{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+    <h1 class="text-xl font-bold text-gray-800">Historial de atenciones</h1>
+    <span class="bg-indigo-100 text-indigo-700 text-xs font-bold px-3 py-1 rounded-full">{{ atenciones|length }}</span>
+</div>
+
+{% if atenciones %}
+<div class="space-y-3">
+    {% for a in atenciones %}
+    <div class="bg-white rounded-2xl shadow border border-gray-100 p-4">
+        <div class="flex items-center justify-between gap-3 mb-2">
+            <div>
+                <p class="text-base font-bold text-gray-800">{{ a.mascota.nombre }}</p>
+                <p class="text-sm text-gray-500">{{ a.servicio.nombre }}</p>
+            </div>
+            <div class="text-right shrink-0">
+                <p class="text-sm font-bold text-green-600">${{ '%.2f' | format(a.monto_cobrado) }}</p>
+                <span class="inline-block bg-gray-100 text-gray-600 text-xs font-bold px-2 py-0.5 rounded-full capitalize">{{ a.medio_pago }}</span>
+            </div>
+        </div>
+        <p class="text-xs text-gray-400">{{ a.fecha.strftime('%d/%m/%Y %H:%M') if a.fecha else '—' }}</p>
+        {% if a.observaciones %}
+        <p class="mt-2 text-sm text-gray-600 bg-gray-50 rounded-xl px-3 py-2 whitespace-pre-line">{{ a.observaciones }}</p>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="bg-white rounded-2xl shadow border border-gray-100 px-5 py-12 text-center">
+    <p class="text-gray-400 text-sm">Sin atenciones registradas todavia.</p>
+</div>
+{% endif %}
+{% endblock %}

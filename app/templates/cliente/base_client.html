@@ -13,7 +13,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Servipet">
     <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
-    <meta name="description" content="Gestion para lavaderos y comercios de mascotas">
+    <meta name="description" content="Portal de clientes Servipet">
 
     <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -25,7 +25,7 @@
             touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
         }
-        main { padding-bottom: calc(5rem + env(safe-area-inset-bottom)); }
+        main { padding-bottom: calc(6.5rem + env(safe-area-inset-bottom)); }
 
         @keyframes slide-up {
             from { transform: translateY(100%); opacity: 0; }
@@ -39,54 +39,31 @@
 </head>
 <body class="bg-gray-100 min-h-screen">
 
-    <!-- Navbar mobile-first -->
-    <nav class="bg-indigo-600 text-white shadow-lg sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-            <a href="/" class="text-xl font-bold tracking-tight">Servipet</a>
-
-            <!-- Desktop nav -->
-            <div class="hidden md:flex gap-4 text-sm font-medium">
-                <a href="/page/turnos" class="hover:text-indigo-200 transition">Turnos</a>
-                <a href="/page/clientes" class="hover:text-indigo-200 transition">Clientes</a>
-                <a href="/page/mascotas" class="hover:text-indigo-200 transition">Mascotas</a>
-                <a href="/page/servicios" class="hover:text-indigo-200 transition">Servicios</a>
-                <a href="/page/atenciones" class="hover:text-indigo-200 transition">Atenciones</a>
-            </div>
-
-            <!-- Mobile hamburger -->
-            <button id="menu-btn" class="md:hidden p-2 rounded-lg text-2xl leading-none active:opacity-70" aria-label="Menu">&#9776;</button>
-        </div>
-
-        <!-- Mobile menu -->
-        <div id="mobile-menu" class="hidden md:hidden border-t border-indigo-500 px-4 pb-3 space-y-2 text-sm font-medium">
-            <a href="/page/turnos" class="block py-2.5 hover:text-indigo-200 transition active:opacity-70">Turnos</a>
-            <a href="/page/clientes" class="block py-2.5 hover:text-indigo-200 transition active:opacity-70">Clientes</a>
-            <a href="/page/mascotas" class="block py-2.5 hover:text-indigo-200 transition active:opacity-70">Mascotas</a>
-            <a href="/page/servicios" class="block py-2.5 hover:text-indigo-200 transition active:opacity-70">Servicios</a>
-            <a href="/page/atenciones" class="block py-2.5 hover:text-indigo-200 transition active:opacity-70">Atenciones</a>
-        </div>
-    </nav>
-
     <!-- Flash messages -->
     {% if success %}
-    <div class="max-w-7xl mx-auto mt-4 px-4">
-        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded text-sm">
+    <div class="px-4 pt-4">
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-2xl text-sm">
             {{ success }}
         </div>
     </div>
     {% endif %}
     {% if error %}
-    <div class="max-w-7xl mx-auto mt-4 px-4">
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded text-sm">
+    <div class="px-4 pt-4">
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-2xl text-sm">
             {{ error }}
         </div>
     </div>
     {% endif %}
 
-    <!-- PWA install prompt (bottom, discreet) -->
-    <div id="install-banner" class="hidden fixed inset-x-0 z-50 px-4"
-         style="bottom: calc(1rem + env(safe-area-inset-bottom));">
-        <div class="max-w-xl mx-auto bg-white border border-indigo-200 rounded-2xl px-4 py-3 flex items-center justify-between gap-3 shadow-lg">
+    <!-- Content -->
+    <main class="max-w-3xl mx-auto px-4 pt-6">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- PWA install prompt (bottom, above nav) -->
+    <div id="install-banner" class="hidden fixed inset-x-0 z-40 px-4"
+         style="bottom: calc(4.5rem + env(safe-area-inset-bottom));">
+        <div class="bg-white border border-indigo-200 rounded-2xl px-4 py-3 flex items-center justify-between gap-3 shadow-lg">
             <div class="flex items-center gap-3 min-w-0">
                 <img src="/static/icons/icon-192.png" alt="" class="w-10 h-10 rounded-xl shrink-0">
                 <div class="min-w-0">
@@ -101,24 +78,53 @@
         </div>
     </div>
 
-    <!-- Content -->
-    <main class="max-w-7xl mx-auto px-4 py-6">
-        {% block content %}{% endblock %}
-    </main>
+    <!-- Bottom Navigation Bar -->
+    <nav class="fixed bottom-0 inset-x-0 z-50 bg-white border-t border-gray-200 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]"
+         style="padding-bottom: env(safe-area-inset-bottom);">
+        <div class="max-w-3xl mx-auto grid grid-cols-4">
+            <a href="/cliente/dashboard"
+               aria-current="{% if request.url.path == '/cliente/dashboard' %}page{% endif %}"
+               class="flex flex-col items-center justify-center py-3 min-h-14 text-xs font-medium transition active:opacity-70
+                      {% if request.url.path == '/cliente/dashboard' %}text-indigo-600{% else %}text-gray-400 hover:text-indigo-500{% endif %}">
+                <svg class="w-6 h-6 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h3a1 1 0 001-1v-4h4v4a1 1 0 001 1h3a1 1 0 001-1V10"/>
+                </svg>
+                Inicio
+            </a>
+            <a href="/cliente/turnos"
+               aria-current="{% if request.url.path in ['/cliente/turnos', '/cliente/reservar'] %}page{% endif %}"
+               class="flex flex-col items-center justify-center py-3 min-h-14 text-xs font-medium transition active:opacity-70
+                      {% if request.url.path in ['/cliente/turnos', '/cliente/reservar'] %}text-indigo-600{% else %}text-gray-400 hover:text-indigo-500{% endif %}">
+                <svg class="w-6 h-6 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Mis Turnos
+            </a>
+            <a href="/cliente/mascotas"
+               aria-current="{% if request.url.path == '/cliente/mascotas' %}page{% endif %}"
+               class="flex flex-col items-center justify-center py-3 min-h-14 text-xs font-medium transition active:opacity-70
+                      {% if request.url.path == '/cliente/mascotas' %}text-indigo-600{% else %}text-gray-400 hover:text-indigo-500{% endif %}">
+                <svg class="w-6 h-6 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.25c2-1.5 4.5-1.5 6 0 1.5 1.5 1.5 4 0 5.5L12 18l-6-6.25c-1.5-1.5-1.5-4 0-5.5 1.5-1.5 4-1.5 6 0z"/>
+                </svg>
+                Mis Mascotas
+            </a>
+            <a href="/cliente/logout"
+               class="flex flex-col items-center justify-center py-3 min-h-14 text-xs font-medium transition text-gray-400 hover:text-red-500 active:opacity-70">
+                <svg class="w-6 h-6 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                </svg>
+                Salir
+            </a>
+        </div>
+    </nav>
 
     <!-- Scripts -->
     <script>
-        // Mobile menu toggle
-        document.getElementById('menu-btn').addEventListener('click', function() {
-            document.getElementById('mobile-menu').classList.toggle('hidden');
-        });
-
-        // Service Worker
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/static/sw.js').catch(function() {});
         }
 
-        // PWA Install prompt
         var INSTALL_KEY = 'servipet_install_dismissed';
         var isStandalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches ||
             (window.navigator.standalone === true);

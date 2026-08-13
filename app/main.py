@@ -6,9 +6,10 @@ from fastapi.staticfiles import StaticFiles
 from app.config import settings
 from app.database import Base, engine
 from app.routers import comercios, clientes, mascotas, servicios, atenciones
+from app.routers import client, client_auth, client_booking, admin_turnos
 from app.routers import pages
 
-from app.models import Comercio, Cliente, Mascota, Servicio, AtencionHistorial  # noqa: F401
+from app.models import Comercio, Cliente, ClienteOTP, Mascota, Servicio, AtencionHistorial, Turno  # noqa: F401
 
 
 app = FastAPI(title=settings.APP_NAME, debug=settings.DEBUG)
@@ -61,6 +62,11 @@ app.include_router(clientes.router)
 app.include_router(mascotas.router)
 app.include_router(servicios.router)
 app.include_router(atenciones.router)
+app.include_router(client.router)
+app.include_router(client_auth.router)
+app.include_router(client_booking.API_ROUTER)
+app.include_router(client_booking.BOOKING_ROUTER)
+app.include_router(admin_turnos.router)
 app.include_router(pages.router)
 
 

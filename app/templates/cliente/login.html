@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ingreso Clientes — Servipet</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-sm">
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <div class="bg-indigo-600 text-white px-6 py-5 text-center">
+                <h1 class="text-xl font-bold">Servipet</h1>
+                <p class="text-sm text-indigo-200 mt-1">Portal de clientes</p>
+            </div>
+            <form method="post" action="/cliente/login" class="p-6 space-y-4">
+                {% if error %}
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded text-sm">
+                    {{ error }}
+                </div>
+                {% endif %}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Telefono</label>
+                    <input type="tel" name="telefono" required autofocus class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Ej: 1123456789">
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition text-sm font-medium">
+                    Enviar codigo
+                </button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

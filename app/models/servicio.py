@@ -11,5 +11,7 @@ class Servicio(Base):
     nombre: Mapped[str] = mapped_column(String(150), nullable=False)
     descripcion: Mapped[str | None] = mapped_column(Text, nullable=True)
     precio_base: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    duracion_minutos: Mapped[int] = mapped_column(Integer, nullable=False, default=30)
 
     atenciones: Mapped[list["AtencionHistorial"]] = relationship("AtencionHistorial", back_populates="servicio")  # noqa: F821
+    turnos: Mapped[list["Turno"]] = relationship("Turno", back_populates="servicio")  # noqa: F821

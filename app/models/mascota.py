@@ -10,6 +10,7 @@ class Mascota(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     cliente_id: Mapped[int] = mapped_column(Integer, ForeignKey("clientes.id"), nullable=False)
     nombre: Mapped[str] = mapped_column(String(100), nullable=False)
+    especie: Mapped[str | None] = mapped_column(String(50), nullable=True)
     raza: Mapped[str] = mapped_column(String(100), nullable=True)
     peso: Mapped[float | None] = mapped_column(Float, nullable=True)
     edad: Mapped[int | None] = mapped_column(Integer, nullable=True)
@@ -21,3 +22,4 @@ class Mascota(Base):
 
     cliente: Mapped["Cliente"] = relationship("Cliente", back_populates="mascotas")  # noqa: F821
     atenciones: Mapped[list["AtencionHistorial"]] = relationship("AtencionHistorial", back_populates="mascota")  # noqa: F821
+    turnos: Mapped[list["Turno"]] = relationship("Turno", back_populates="mascota")  # noqa: F821

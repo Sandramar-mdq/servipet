@@ -1,0 +1,63 @@
+{% extends "cliente/base_client.html" %}
+{% block title %}Inicio — Servipet{% endblock %}
+
+{% block content %}
+<div class="bg-indigo-600 text-white rounded-2xl p-5 shadow-lg mb-6">
+    <p class="text-indigo-200 text-sm">Hola</p>
+    <h1 class="text-2xl font-bold">{{ cliente.nombre }}</h1>
+    <p class="text-indigo-200 text-sm mt-1">Sesion iniciada con {{ cliente.telefono }}</p>
+</div>
+
+<div class="grid grid-cols-2 gap-4 mb-6">
+    <div class="bg-white rounded-2xl shadow border border-gray-100 p-4">
+        <p class="text-3xl font-bold text-indigo-600">{{ mascotas|length }}</p>
+        <p class="text-sm text-gray-500 font-medium">Mascotas</p>
+    </div>
+    <div class="bg-white rounded-2xl shadow border border-gray-100 p-4">
+        <p class="text-3xl font-bold text-indigo-600">{{ total_atenciones }}</p>
+        <p class="text-sm text-gray-500 font-medium">Atenciones</p>
+    </div>
+</div>
+
+{% if atenciones %}
+<div class="bg-white rounded-2xl shadow border border-gray-100 mb-6">
+    <div class="px-5 py-4 border-b border-gray-100">
+        <h2 class="text-base font-bold text-gray-800">Ultimas atenciones</h2>
+    </div>
+    <ul class="divide-y divide-gray-100">
+        {% for a in atenciones %}
+        <li class="px-5 py-3 flex items-center justify-between gap-3">
+            <div>
+                <p class="text-sm font-semibold text-gray-800">{{ a.mascota.nombre }}</p>
+                <p class="text-xs text-gray-500">{{ a.servicio.nombre }}</p>
+            </div>
+            <div class="text-right">
+                <p class="text-sm font-bold text-green-600">${{ '%.2f' | format(a.monto_cobrado) }}</p>
+                <p class="text-xs text-gray-400">{{ a.fecha.strftime('%d/%m/%Y') if a.fecha else '—' }}</p>
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% else %}
+<div class="bg-white rounded-2xl shadow border border-gray-100 px-5 py-8 mb-6 text-center">
+    <p class="text-gray-400 text-sm">Todavia no tenes atenciones registradas.</p>
+</div>
+{% endif %}
+
+<a href="/cliente/reservar" class="block bg-indigo-600 text-white rounded-2xl p-4 text-center shadow-lg hover:bg-indigo-700 transition mb-4">
+    <p class="text-lg font-bold">Reservar Turno</p>
+    <p class="text-sm text-indigo-200">Elegi dia y horario</p>
+</a>
+
+<div class="grid grid-cols-2 gap-4">
+    <a href="/cliente/mascotas" class="bg-indigo-600 text-white rounded-2xl p-4 text-center shadow-lg hover:bg-indigo-700 transition">
+        <p class="text-lg font-bold">Mis Mascotas</p>
+        <p class="text-sm text-indigo-200">Ver y consultar</p>
+    </a>
+    <a href="/cliente/historial" class="bg-white border border-indigo-200 text-indigo-600 rounded-2xl p-4 text-center shadow hover:bg-indigo-50 transition">
+        <p class="text-lg font-bold">Historial</p>
+        <p class="text-sm text-indigo-400">Tus atenciones</p>
+    </a>
+</div>
+{% endblock %}

@@ -1,0 +1,65 @@
+{% extends "cliente/base_client.html" %}
+{% block title %}Mis Mascotas — Servipet{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+    <h1 class="text-xl font-bold text-gray-800">Mis Mascotas</h1>
+    <span class="bg-indigo-100 text-indigo-700 text-xs font-bold px-3 py-1 rounded-full">{{ mascotas|length }}</span>
+</div>
+
+{% if mascotas %}
+<div class="space-y-4">
+    {% for m in mascotas %}
+    <div class="bg-white rounded-2xl shadow border border-gray-100 overflow-hidden">
+        <div class="flex items-center gap-4 p-4">
+            {% if m.foto_webp %}
+            <img src="data:image/webp;base64,{{ m.foto_webp }}" alt="{{ m.nombre }}" class="w-16 h-16 object-cover rounded-full border-2 border-indigo-100 shrink-0">
+            {% else %}
+            <div class="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center text-2xl font-bold text-indigo-600 shrink-0">
+                {{ m.nombre[:1]|upper }}
+            </div>
+            {% endif %}
+            <div class="min-w-0">
+                <h2 class="text-lg font-bold text-gray-800">{{ m.nombre }}</h2>
+                <p class="text-sm text-gray-500">
+                    {% if m.especie %}{{ m.especie }}{% endif %}
+                    {% if m.raza %}{% if m.especie %} &middot; {% endif %}{{ m.raza }}{% endif %}
+                    {% if m.sexo %} &middot; {{ m.sexo }}{% endif %}
+                </p>
+            </div>
+        </div>
+        <div class="px-4 pb-4 grid grid-cols-2 gap-3 text-sm">
+            <div class="bg-gray-50 rounded-xl px-3 py-2">
+                <span class="text-gray-400 block text-xs uppercase tracking-wide">Especie</span>
+                <span class="font-semibold text-gray-800">{{ m.especie or '—' }}</span>
+            </div>
+            <div class="bg-gray-50 rounded-xl px-3 py-2">
+                <span class="text-gray-400 block text-xs uppercase tracking-wide">Peso</span>
+                <span class="font-semibold text-gray-800">{{ '%.1f' | format(m.peso) ~ ' kg' if m.peso is not none else '—' }}</span>
+            </div>
+            <div class="bg-gray-50 rounded-xl px-3 py-2">
+                <span class="text-gray-400 block text-xs uppercase tracking-wide">Edad</span>
+                <span class="font-semibold text-gray-800">{{ m.edad ~ ' anios' if m.edad else '—' }}</span>
+            </div>
+            {% if m.alergias %}
+            <div class="bg-red-50 rounded-xl px-3 py-2 col-span-2">
+                <span class="text-red-400 block text-xs uppercase tracking-wide">Alergias</span>
+                <p class="text-red-600 text-sm whitespace-pre-line">{{ m.alergias }}</p>
+            </div>
+            {% endif %}
+            {% if m.observaciones %}
+            <div class="bg-gray-50 rounded-xl px-3 py-2 col-span-2">
+                <span class="text-gray-400 block text-xs uppercase tracking-wide">Observaciones</span>
+                <p class="text-gray-700 text-sm whitespace-pre-line">{{ m.observaciones }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="bg-white rounded-2xl shadow border border-gray-100 px-5 py-12 text-center">
+    <p class="text-gray-400 text-sm">Aun no tenes mascotas registradas.</p>
+</div>
+{% endif %}
+{% endblock %}

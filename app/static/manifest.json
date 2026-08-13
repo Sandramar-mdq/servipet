@@ -1,24 +1,50 @@
 {
-    "name": "Servipet - Gestion de Lavadero",
+    "name": "Servipet — Servicios para Mascotas",
     "short_name": "Servipet",
-    "description": "PWA de gestion interna para lavaderos y comercios de mascotas",
-    "start_url": "/page/",
+    "description": "Portal de servicios para mascotas: turnos, historial y consultas",
+    "start_url": "/cliente/dashboard",
+    "scope": "/",
+    "id": "/",
     "display": "standalone",
-    "background_color": "#f3f4f6",
-    "theme_color": "#4f46e5",
+    "background_color": "#ffffff",
+    "theme_color": "#4F46E5",
     "orientation": "any",
     "icons": [
+        {
+            "src": "/static/icons/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/static/icons/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "/static/icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/static/icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
         {
             "src": "/static/icons/icon-192.svg",
             "sizes": "192x192",
             "type": "image/svg+xml",
-            "purpose": "any maskable"
+            "purpose": "any"
         },
         {
             "src": "/static/icons/icon-512.svg",
             "sizes": "512x512",
             "type": "image/svg+xml",
-            "purpose": "any maskable"
+            "purpose": "any"
         }
     ]
 }

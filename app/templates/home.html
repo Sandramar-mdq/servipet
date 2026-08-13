@@ -4,7 +4,11 @@
 {% block content %}
 <h1 class="text-2xl font-bold text-gray-800 mb-6">Dashboard</h1>
 
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+    <a href="/page/turnos?estado=Pendiente" class="bg-white rounded-lg shadow p-6 hover:shadow-md transition block border-2 border-amber-200">
+        <div class="text-3xl font-bold text-amber-600">{{ stats.turnos_pendientes_hoy }}</div>
+        <div class="text-gray-600 mt-1">Turnos Pendientes de Aprobacion</div>
+    </a>
     <a href="/page/clientes" class="bg-white rounded-lg shadow p-6 hover:shadow-md transition block">
         <div class="text-3xl font-bold text-indigo-600">{{ stats.clientes }}</div>
         <div class="text-gray-600 mt-1">Clientes</div>
