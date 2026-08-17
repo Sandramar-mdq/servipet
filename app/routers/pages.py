@@ -47,7 +47,7 @@ def page_clientes(request: Request, db: Session = Depends(get_db)):
     return templates.TemplateResponse(
         request=request,
         name="clientes/listar.html",
-        cotext={"clientes": clientes}
+        context={"clientes": clientes}
     )
 
 
@@ -225,9 +225,9 @@ def page_mascota_detalle(mascota_id: int, request: Request, db: Session = Depend
         request=request,
         name="mascotas/detalle.html", 
         context={
-        "mascota": mascota,
-        "cliente": cliente,
-        "atenciones": atenciones,
+            "mascota": mascota,
+            "cliente": cliente,
+            "atenciones": atenciones,
         },
     )
 
