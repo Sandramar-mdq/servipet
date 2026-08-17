@@ -36,13 +36,16 @@ def dashboard(request: Request, cliente: Cliente = Depends(get_current_client), 
             .limit(5)
             .all()
         )
-    return templates.TemplateResponse("cliente/dashboard.html", {
-        "request": request,
-        "cliente": cliente,
-        "mascotas": mascotas,
-        "atenciones": atenciones,
-        "total_atenciones": total_atenciones,
-    })
+    return templates.TemplateResponse(
+        request: request,
+        name="cliente/dashboard.html",
+        context={        
+            "cliente": cliente,
+            "mascotas": mascotas,
+            "atenciones": atenciones,
+            "total_atenciones": total_atenciones,
+        },
+    )
 
 
 @router.get("/mascotas", response_class=HTMLResponse)
@@ -53,11 +56,14 @@ def listar_mascotas(request: Request, cliente: Cliente = Depends(get_current_cli
         .order_by(Mascota.nombre.asc())
         .all()
     )
-    return templates.TemplateResponse("cliente/mascotas.html", {
-        "request": request,
-        "cliente": cliente,
-        "mascotas": mascotas,
-    })
+    return templates.TemplateResponse(
+        request=request,
+        name="cliente/mascotas.html",
+        context={
+            "cliente": cliente,
+            "mascotas": mascotas,
+        },
+    )
 
 
 @router.get("/historial", response_class=HTMLResponse)
@@ -76,11 +82,14 @@ def historial(request: Request, cliente: Cliente = Depends(get_current_client), 
             .order_by(AtencionHistorial.fecha.desc())
             .all()
         )
-    return templates.TemplateResponse("cliente/historial.html", {
-        "request": request,
-        "cliente": cliente,
-        "atenciones": atenciones,
-    })
+    return templates.TemplateResponse(
+        request=request,
+        name="cliente/historial.html",
+        context={
+            "cliente": cliente,
+            "atenciones": atenciones,
+        },
+    )
 
 
 @router.get("/panel")

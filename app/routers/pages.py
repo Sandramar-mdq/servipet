@@ -32,7 +32,11 @@ def home(request: Request, db: Session = Depends(get_db)):
             .count()
         ),
     }
-    return templates.TemplateResponse("home.html", {"request": request, "stats": stats})
+    return templates.TemplateResponse(
+        request=request,
+        name="home.html",
+        context={"stats": stats}
+    )
 
 
 # ── Clientes ──────────────────────────────────────────────
@@ -40,12 +44,20 @@ def home(request: Request, db: Session = Depends(get_db)):
 @router.get("/clientes", response_class=HTMLResponse)
 def page_clientes(request: Request, db: Session = Depends(get_db)):
     clientes = db.query(Cliente).filter(Cliente.activo == True).all()
-    return templates.TemplateResponse("clientes/listar.html", {"request": request, "clientes": clientes})
+    return templates.TemplateResponse(
+        request=request,
+        name="clientes/listar.html",
+        cotext={"clientes": clientes}
+    )
 
 
 @router.get("/clientes/nuevo", response_class=HTMLResponse)
 def page_cliente_nuevo(request: Request):
-    return templates.TemplateResponse("clientes/form.html", {"request": request, "cliente": None})
+    return templates.TemplateResponse(
+        request=request,
+        name="clientes/form.html",
+        context={"cliente": None}
+    )
 
 
 @router.get("/clientes/{cliente_id}", response_class=HTMLResponse)
@@ -81,19 +93,27 @@ def page_cliente_detalle(cliente_id: int, request: Request, db: Session = Depend
                 ultima_atencion.fecha.strftime("%d/%m/%Y") if ultima_atencion and ultima_atencion.fecha else "—"
             ),
         })
-    return templates.TemplateResponse("clientes/detalle.html", {
-        "request": request,
-        "cliente": cliente,
-        "mascotas": mascotas_data,
-        "total_gastado": total_gastado,
-        "total_mascotas": len(mascotas),
-    })
+    return templates.TemplateResponse(
+        request=request,
+        name="clientes/detalle.html",
+        context={
+            "request": request,
+            "cliente": cliente,
+            "mascotas": mascotas_data,
+            "total_gastado": total_gastado,
+            "total_mascotas": len(mascotas),
+        },
+    )
 
 
 @router.get("/clientes/{cliente_id}/editar", response_class=HTMLResponse)
 def page_cliente_editar(cliente_id: int, request: Request, db: Session = Depends(get_db)):
     cliente = db.query(Cliente).filter(Cliente.id == cliente_id).first()
-    return templates.TemplateResponse("clientes/form.html", {"request": request, "cliente": cliente})
+    return templates.TemplateResponse(
+        request=request,
+        name="clientes/form.html",
+        context={"cliente": cliente}
+    )
 
 
 @router.post("/clientes/nuevo")
@@ -158,13 +178,24 @@ def page_mascotas(request: Request, db: Session = Depends(get_db)):
             "sexo": m.sexo, "cliente_id": m.cliente_id,
             "cliente_nombre": cliente.nombre if cliente else "—",
         })
-    return templates.TemplateResponse("mascotas/listar.html", {"request": request, "mascotas": mascotas})
+    return templates.TemplateResponse(
+        request=request,
+        name="mascotas/listar.html",
+        context={"mascotas": mascotas}
+    )
 
 
 @router.get("/mascotas/nuevo", response_class=HTMLResponse)
 def page_mascota_nuevo(request: Request, db: Session = Depends(get_db)):
     clientes = db.query(Cliente).filter(Cliente.activo == True).all()
-    return templates.TemplateResponse("mascotas/form.html", {"request": request, "mascota": None, "clientes": clientes})
+    return templates.TemplateResponse(
+        request=request,
+        name="mascotas/form.html",
+        context={
+            "mascota": None, 
+            "clientes": clientes,
+        },
+    )
 
 
 @router.get("/mascotas/{mascota_id}", response_class=HTMLResponse)
@@ -190,19 +221,29 @@ def page_mascota_detalle(mascota_id: int, request: Request, db: Session = Depend
             "medio_pago": a.medio_pago,
             "observaciones": a.observaciones,
         })
-    return templates.TemplateResponse("mascotas/detalle.html", {
-        "request": request,
+    return templates.TemplateResponse(
+        request=request,
+        name="mascotas/detalle.html", 
+        context={
         "mascota": mascota,
         "cliente": cliente,
         "atenciones": atenciones,
-    })
+        },
+    )
 
 
 @router.get("/mascotas/{mascota_id}/editar", response_class=HTMLResponse)
 def page_mascota_editar(mascota_id: int, request: Request, db: Session = Depends(get_db)):
     mascota = db.query(Mascota).filter(Mascota.id == mascota_id).first()
     clientes = db.query(Cliente).filter(Cliente.activo == True).all()
-    return templates.TemplateResponse("mascotas/form.html", {"request": request, "mascota": mascota, "clientes": clientes})
+    return templates.TemplateResponse(
+        request=request,
+        name="mascotas/form.html",
+        context={
+            "mascota": mascota, 
+            "clientes": clientes,
+        },
+    )
 
 
 @router.post("/mascotas/nuevo")
@@ -274,18 +315,30 @@ def eliminar_mascota_form(mascota_id: int, db: Session = Depends(get_db)):
 @router.get("/servicios", response_class=HTMLResponse)
 def page_servicios(request: Request, db: Session = Depends(get_db)):
     servicios = db.query(Servicio).all()
-    return templates.TemplateResponse("servicios/listar.html", {"request": request, "servicios": servicios})
+    return templates.TemplateResponse(
+        request=request,
+        name="servicios/listar.html",
+        context={"servicios": servicios}
+    )
 
 
 @router.get("/servicios/nuevo", response_class=HTMLResponse)
 def page_servicio_nuevo(request: Request):
-    return templates.TemplateResponse("servicios/form.html", {"request": request, "servicio": None})
+    return templates.TemplateResponse(
+        request=request,
+        name="servicios/form.html",
+        context={"servicio": None}
+    )
 
 
 @router.get("/servicios/{servicio_id}/editar", response_class=HTMLResponse)
 def page_servicio_editar(servicio_id: int, request: Request, db: Session = Depends(get_db)):
     servicio = db.query(Servicio).filter(Servicio.id == servicio_id).first()
-    return templates.TemplateResponse("servicios/form.html", {"request": request, "servicio": servicio})
+    return templates.TemplateResponse(
+        request=request,
+        name="servicios/form.html",
+        context={"servicio": servicio}
+    )
 
 
 @router.post("/servicios/nuevo")
@@ -336,7 +389,11 @@ def page_atenciones(request: Request, db: Session = Depends(get_db)):
             "servicio_nombre": servicio.nombre if servicio else "—",
             "monto_cobrado": a.monto_cobrado, "medio_pago": a.medio_pago,
         })
-    return templates.TemplateResponse("atenciones/listar.html", {"request": request, "atenciones": atenciones})
+    return templates.TemplateResponse(
+        request=request,
+        mane="atenciones/listar.html",
+        context={"atenciones": atenciones}
+    )
 
 
 @router.get("/atenciones/nuevo", response_class=HTMLResponse)
@@ -347,7 +404,15 @@ def page_atencion_nuevo(request: Request, db: Session = Depends(get_db)):
         cliente = db.query(Cliente).filter(Cliente.id == m.cliente_id).first()
         mascotas.append({"id": m.id, "nombre": m.nombre, "cliente_nombre": cliente.nombre if cliente else "—"})
     servicios = db.query(Servicio).all()
-    return templates.TemplateResponse("atenciones/form.html", {"request": request, "atencion": None, "mascotas": mascotas, "servicios": servicios})
+    return templates.TemplateResponse(
+        request=request,
+        name="atenciones/form.html",
+        context={
+            "atencion": None,
+            "mascotas": mascotas,
+            "servicios": servicios
+        },
+    )
 
 
 @router.get("/atenciones/{atencion_id}/editar", response_class=HTMLResponse)
@@ -369,7 +434,15 @@ def page_atencion_editar(atencion_id: int, request: Request, db: Session = Depen
         cliente = db.query(Cliente).filter(Cliente.id == m.cliente_id).first()
         mascotas.append({"id": m.id, "nombre": m.nombre, "cliente_nombre": cliente.nombre if cliente else "—"})
     servicios = db.query(Servicio).all()
-    return templates.TemplateResponse("atenciones/form.html", {"request": request, "atencion": atencion_data, "mascotas": mascotas, "servicios": servicios})
+    return templates.TemplateResponse(
+        request=request,
+        name="atenciones/form.html",
+        context={
+            "atencion": atencion_data,
+            "mascotas": mascotas,
+            "servicios": servicios
+        },
+    )
 
 
 @router.post("/atenciones/nuevo")
