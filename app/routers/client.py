@@ -37,7 +37,7 @@ def dashboard(request: Request, cliente: Cliente = Depends(get_current_client), 
             .all()
         )
     return templates.TemplateResponse(
-        request: request,
+        request=request,
         name="cliente/dashboard.html",
         context={        
             "cliente": cliente,
