@@ -13,7 +13,7 @@ from app.services.notifier import notificar_cambio_estado_turno
 router = APIRouter(prefix="/page", tags=["Admin Turnos"])
 templates = Jinja2Templates(directory="app/templates")
 
-ESTADOS = ["Pendiente", "Confirmado", "Cancelado", "Finalizado"]
+ESTADOS = ["PENDIENTE", "CONFIRMADO", "CANCELADO", "CANCELADO_TARDIO", "FINALIZADO"]
 MEDIOS_PAGO = ["efectivo", "transferencia", "debito", "credito", "qr"]
 
 
@@ -73,7 +73,7 @@ def cambiar_estado_turno(
         return RedirectResponse("/page/turnos?error=Turno inexistente", status_code=303)
     if estado not in ESTADOS:
         return RedirectResponse("/page/turnos?error=Estado invalido", status_code=303)
-    if estado == "Finalizado" and turno.estado == "Cancelado":
+    if estado == "FINALIZADO" and turno.estado in ("CANCELADO", "CANCELADO_TARDIO"):
         return RedirectResponse("/page/turnos?error=No se puede finalizar un turno cancelado", status_code=303)
 
     turno.estado = estado
@@ -99,9 +99,9 @@ def completar_turno(
     turno = db.query(Turno).filter(Turno.id == turno_id).first()
     if not turno:
         return RedirectResponse("/page/turnos?error=Turno inexistente", status_code=303)
-    if turno.estado == "Finalizado":
+    if turno.estado == "FINALIZADO":
         return RedirectResponse("/page/turnos?error=El turno ya fue finalizado", status_code=303)
-    if turno.estado == "Cancelado":
+    if turno.estado in ("CANCELADO", "CANCELADO_TARDIO"):
         return RedirectResponse("/page/turnos?error=No se puede completar un turno cancelado", status_code=303)
     if (turno.cliente_id, turno.mascota_id, turno.servicio_id) != (cliente_id, mascota_id, servicio_id):
         return RedirectResponse("/page/turnos?error=Datos del turno inconsistentes", status_code=303)
@@ -111,12 +111,13 @@ def completar_turno(
     atencion = AtencionHistorial(
         mascota_id=turno.mascota_id,
         servicio_id=turno.servicio_id,
+        turno_id=turno.id,
         fecha=turno.fecha_hora,
         observaciones=observaciones or None,
         monto_cobrado=monto_cobrado,
         medio_pago=medio_pago,
     )
-    turno.estado = "Finalizado"
+    turno.estado = "FINALIZADO"
     db.add(atencion)
     db.commit()
 

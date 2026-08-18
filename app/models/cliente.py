@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -6,9 +6,13 @@ from app.database import Base
 
 class Cliente(Base):
     __tablename__ = "clientes"
+    __table_args__ = (
+        UniqueConstraint("usuario_id", name="uq_cliente_usuario"),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     comercio_id: Mapped[int] = mapped_column(Integer, ForeignKey("comercios.id"), nullable=False)
+    usuario_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("usuarios.id"), nullable=True)
     nombre: Mapped[str] = mapped_column(String(150), nullable=False)
     telefono: Mapped[str] = mapped_column(String(30), nullable=True)
     email: Mapped[str] = mapped_column(String(150), nullable=True)
@@ -17,5 +21,6 @@ class Cliente(Base):
     activo: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
     comercio: Mapped["Comercio"] = relationship("Comercio", back_populates="clientes")  # noqa: F821
+    usuario: Mapped["Usuario | None"] = relationship("Usuario", back_populates="cliente_profile")  # noqa: F821
     mascotas: Mapped[list["Mascota"]] = relationship("Mascota", back_populates="cliente")  # noqa: F821
     turnos: Mapped[list["Turno"]] = relationship("Turno", back_populates="cliente")  # noqa: F821

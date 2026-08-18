@@ -12,6 +12,7 @@ class AtencionHistorial(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     mascota_id: Mapped[int] = mapped_column(Integer, ForeignKey("mascotas.id"), nullable=False)
     servicio_id: Mapped[int] = mapped_column(Integer, ForeignKey("servicios.id"), nullable=False)
+    turno_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("turnos.id"), nullable=True)
     fecha: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.now)
     observaciones: Mapped[str | None] = mapped_column(Text, nullable=True)
     monto_cobrado: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
@@ -21,3 +22,4 @@ class AtencionHistorial(Base):
 
     mascota: Mapped["Mascota"] = relationship("Mascota", back_populates="atenciones")  # noqa: F821
     servicio: Mapped["Servicio"] = relationship("Servicio", back_populates="atenciones")  # noqa: F821
+    turno: Mapped["Turno | None"] = relationship("Turno", back_populates="atencion")  # noqa: F821

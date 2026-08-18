@@ -2,14 +2,41 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
+from sqlalchemy.orm import Session
 
 from app.config import settings
-from app.database import Base, engine
+from app.database import Base, SessionLocal, engine
 from app.routers import comercios, clientes, mascotas, servicios, atenciones
 from app.routers import client, client_auth, client_booking, admin_turnos
-from app.routers import pages
+from app.routers import auth, pages, portal
 
-from app.models import Comercio, Cliente, ClienteOTP, Mascota, Servicio, AtencionHistorial, Turno  # noqa: F401
+from app.models import Comercio, Usuario, Cliente, ClienteOTP, Mascota, Servicio, AtencionHistorial, Turno  # noqa: F401
+
+
+def init_db_seeding() -> None:
+    """Inserta datos semilla idempotentes durante el arranque.
+
+    - Verifica si existe Comercio con id=1; si no, lo crea con valores por defecto.
+    - La sesión se cierra siempre en finally para no bloquear el startup.
+    - Cualquier error de BD se traga para no impedir el arranque en Render.
+    """
+    db: Session = SessionLocal()
+    try:
+        from app.models.comercio import Comercio as ComercioModel  # import local evita circular
+        exists = db.query(ComercioModel).filter(ComercioModel.id == 1).first()
+        if not exists:
+            seed = ComercioModel(
+                id=1,
+                nombre="Comercio Principal / Demo",
+                tipo_comercio="MULTIRRUBRO",
+                activo=True,
+            )
+            db.add(seed)
+            db.commit()
+    except Exception:
+        db.rollback()
+    finally:
+        db.close()
 
 
 app = FastAPI(title=settings.APP_NAME, debug=settings.DEBUG)
@@ -67,12 +94,15 @@ app.include_router(client_auth.router)
 app.include_router(client_booking.API_ROUTER)
 app.include_router(client_booking.BOOKING_ROUTER)
 app.include_router(admin_turnos.router)
+app.include_router(auth.router)
+app.include_router(portal.router)
 app.include_router(pages.router)
 
 
 @app.on_event("startup")
 def on_startup():
     Base.metadata.create_all(bind=engine)
+    init_db_seeding()
 
 
 @app.get("/")

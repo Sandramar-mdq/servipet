@@ -3,6 +3,7 @@ from pydantic import BaseModel
 
 class ClienteCreate(BaseModel):
     comercio_id: int
+    usuario_id: int | None = None
     nombre: str
     telefono: str | None = None
     email: str | None = None
@@ -16,11 +17,13 @@ class ClienteUpdate(BaseModel):
     email: str | None = None
     notas: str | None = None
     foto_webp: str | None = None
+    usuario_id: int | None = None
 
 
 class ClienteResponse(BaseModel):
     id: int
     comercio_id: int
+    usuario_id: int | None = None
     nombre: str
     telefono: str | None = None
     email: str | None = None

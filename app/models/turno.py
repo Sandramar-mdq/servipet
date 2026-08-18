@@ -22,3 +22,4 @@ class Turno(Base):
     cliente: Mapped["Cliente"] = relationship("Cliente", back_populates="turnos")  # noqa: F821
     mascota: Mapped["Mascota"] = relationship("Mascota", back_populates="turnos")  # noqa: F821
     servicio: Mapped["Servicio"] = relationship("Servicio", back_populates="turnos")  # noqa: F821
+    atencion: Mapped["AtencionHistorial | None"] = relationship("AtencionHistorial", back_populates="turno", uselist=False)  # noqa: F821
