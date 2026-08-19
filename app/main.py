@@ -24,6 +24,7 @@ from app.database import Base, SessionLocal, engine
 from app.routers import comercios, clientes, mascotas, servicios, atenciones
 from app.routers import client, client_auth, client_booking, admin_turnos
 from app.routers import auth, pages, portal
+from app.routers import productos, ventas, caja, dashboard
 
 from app.models import Comercio, Usuario, Cliente, ClienteOTP, Mascota, Servicio, AtencionHistorial, Turno  # noqa: F401
 
@@ -113,6 +114,10 @@ app.include_router(admin_turnos.router)
 app.include_router(auth.router)
 app.include_router(portal.router)
 app.include_router(pages.router)
+app.include_router(productos.router)
+app.include_router(ventas.router)
+app.include_router(caja.router)
+app.include_router(dashboard.router)
 
 
 @app.on_event("startup")

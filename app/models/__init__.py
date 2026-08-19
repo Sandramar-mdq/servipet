@@ -6,6 +6,11 @@ from app.models.mascota import Mascota
 from app.models.servicio import Servicio
 from app.models.atencion import AtencionHistorial
 from app.models.turno import Turno
+from app.models.producto import Producto
+from app.models.venta import Venta
+from app.models.venta_detalle import VentaDetalle
+from app.models.caja import Caja
+from app.models.caja_movimiento import CajaMovimiento
 
 __all__ = [
     "Comercio",
@@ -16,4 +21,9 @@ __all__ = [
     "Servicio",
     "AtencionHistorial",
     "Turno",
+    "Producto",
+    "Venta",
+    "VentaDetalle",
+    "Caja",
+    "CajaMovimiento",
 ]

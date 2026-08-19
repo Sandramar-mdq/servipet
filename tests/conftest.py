@@ -2,7 +2,7 @@ import os
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
@@ -11,6 +11,9 @@ os.environ["SECRET_KEY"] = "test-secret-key-for-testing-only"
 
 from app.database import Base, get_db  # noqa: E402
 from app.main import app  # noqa: E402
+from app.models.comercio import Comercio  # noqa: E402
+from app.models.usuario import Usuario  # noqa: E402
+from app.services.auth import hash_password  # noqa: E402
 
 engine = create_engine(
     "sqlite:///:memory:",
@@ -40,9 +43,44 @@ def _override_get_db():
 app.dependency_overrides[get_db] = _override_get_db
 
 
+def _seed_comercio(db):
+    c = Comercio(id=1, nombre="Comercio Test", tipo_comercio="VETERINARIA", activo=True)
+    db.add(c)
+    db.commit()
+    return c
+
+
 @pytest.fixture
 def client():
     return TestClient(app)
+
+
+@pytest.fixture
+def admin_user(client):
+    db = TestingSessionLocal()
+    _seed_comercio(db)
+    admin = Usuario(
+        email="admin@test.com",
+        password_hash=hash_password("admin123"),
+        rol="ADMIN",
+        comercio_id=1,
+        activo=True,
+    )
+    db.add(admin)
+    db.commit()
+    db.close()
+
+    resp = client.post("/auth/login", json={
+        "email": "admin@test.com",
+        "password": "admin123",
+    })
+    assert resp.status_code == 200, resp.text
+    return resp.json()
+
+
+@pytest.fixture
+def admin_headers(admin_user):
+    return {"Authorization": f"Bearer {admin_user['access_token']}"}
 
 
 @pytest.fixture
