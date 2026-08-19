@@ -4,6 +4,21 @@ from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 
+
+def _custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    schema = FastAPI.openapi(self=app)
+    schema.setdefault("components", {}).setdefault("securitySchemes", {})["BearerAuth"] = {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Ingresa el access_token devuelto por /auth/login",
+    }
+    schema["security"] = [{"BearerAuth": []}]
+    app.openapi_schema = schema
+    return schema
+
 from app.config import settings
 from app.database import Base, SessionLocal, engine
 from app.routers import comercios, clientes, mascotas, servicios, atenciones
@@ -40,6 +55,7 @@ def init_db_seeding() -> None:
 
 
 app = FastAPI(title=settings.APP_NAME, debug=settings.DEBUG)
+app.openapi = _custom_openapi
 
 app.add_middleware(
     CORSMiddleware,
