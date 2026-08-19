@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% block title %}Caja Diaria — Servipet{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl font-bold text-gray-800 mb-6">Caja Diaria</h1>
+
+{% if request.query_params.get('success') %}
+<div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded text-sm mb-4">{{ request.query_params.get('success') }}</div>
+{% endif %}
+{% if request.query_params.get('error') %}
+<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded text-sm mb-4">{{ request.query_params.get('error') }}</div>
+{% endif %}
+
+{% if caja_actual %}
+<!-- Caja Abierta -->
+<div class="bg-white rounded-2xl shadow-lg border border-emerald-200 p-5 mb-6">
+    <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-3">
+            <span class="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></span>
+            <h2 class="text-lg font-bold text-gray-800">Caja Abierta</h2>
+        </div>
+        <span class="text-xs text-gray-500">ID #{{ caja_actual.id }}</span>
+    </div>
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+        <div>
+            <div class="text-xs text-gray-500">Monto Inicial</div>
+            <div class="text-lg font-bold text-gray-800">${{ "%.2f" | format(caja_actual.monto_inicial) }}</div>
+        </div>
+        <div>
+            <div class="text-xs text-gray-500">Ingresos</div>
+            <div class="text-lg font-bold text-emerald-600">+${{ "%.2f" | format(total_ingresos) }}</div>
+        </div>
+        <div>
+            <div class="text-xs text-gray-500">Egresos</div>
+            <div class="text-lg font-bold text-red-600">-${{ "%.2f" | format(total_egresos) }}</div>
+        </div>
+        <div>
+            <div class="text-xs text-gray-500">Esperado</div>
+            <div class="text-lg font-bold text-indigo-600">${{ "%.2f" | format(caja_actual.monto_inicial + total_ingresos - total_egresos) }}</div>
+        </div>
+    </div>
+    <div class="text-xs text-gray-500 mb-4">Abierta: {{ caja_actual.fecha_apertura.strftime('%d/%m/%Y %H:%M') if caja_actual.fecha_apertura else '—' }}</div>
+
+    <!-- Movimientos -->
+    {% if movimientos %}
+    <div class="border-t border-gray-100 pt-4 mb-4">
+        <h3 class="text-sm font-bold text-gray-700 mb-2">Movimientos</h3>
+        <div class="max-h-60 overflow-y-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-gray-50"><tr>
+                    <th class="px-3 py-2 text-xs font-bold text-gray-500">Hora</th>
+                    <th class="px-3 py-2 text-xs font-bold text-gray-500">Tipo</th>
+                    <th class="px-3 py-2 text-xs font-bold text-gray-500">Monto</th>
+                    <th class="px-3 py-2 text-xs font-bold text-gray-500">Descripcion</th>
+                </tr></thead>
+                <tbody>
+                {% for m in movimientos %}
+                <tr class="border-b border-gray-50">
+                    <td class="px-3 py-2 text-gray-500">{{ m.creado_en.strftime('%H:%M') if m.creado_en else '—' }}</td>
+                    <td class="px-3 py-2">
+                        {% if m.tipo == 'INGRESO' %}
+                        <span class="text-emerald-600 font-bold">INGRESO</span>
+                        {% else %}
+                        <span class="text-red-600 font-bold">EGRESO</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-3 py-2 font-semibold">${{ "%.2f" | format(m.monto) }}</td>
+                    <td class="px-3 py-2 text-gray-600">{{ m.descripcion }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Acciones -->
+    <div class="flex flex-wrap gap-3">
+        <button onclick="document.getElementById('form-movimiento').classList.toggle('hidden')"
+            class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-indigo-700 transition">+ Movimiento</button>
+        <button onclick="document.getElementById('form-cierre').classList.toggle('hidden')"
+            class="bg-red-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-red-700 transition">Cerrar Caja</button>
+    </div>
+
+    <!-- Form Movimiento -->
+    <div id="form-movimiento" class="hidden mt-4 bg-gray-50 rounded-xl p-4">
+        <form method="post" action="/page/caja/movimiento" class="space-y-3">
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Tipo</label>
+                    <select name="tipo" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        <option value="INGRESO">Ingreso</option>
+                        <option value="EGRESO">Egreso</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Monto</label>
+                    <input type="number" step="0.01" name="monto" required class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Descripcion</label>
+                <input type="text" name="descripcion" required class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+            </div>
+            <div class="flex gap-2">
+                <button type="button" onclick="document.getElementById('form-movimiento').classList.add('hidden')" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-300 transition">Cancelar</button>
+                <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition">Guardar</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Form Cierre -->
+    <div id="form-cierre" class="hidden mt-4 bg-red-50 rounded-xl p-4">
+        <form method="post" action="/page/caja/cerrar" class="space-y-3">
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Monto Final Real (contado en caja)</label>
+                <input type="number" step="0.01" name="monto_final_real" required class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Notas de cierre</label>
+                <textarea name="notas" rows="2" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
+            </div>
+            <div class="flex gap-2">
+                <button type="button" onclick="document.getElementById('form-cierre').classList.add('hidden')" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-300 transition">Cancelar</button>
+                <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition" onclick="return confirm('Cerrar caja?')">Cerrar Caja</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% else %}
+<!-- Sin caja abierta -->
+<div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-6 max-w-xl">
+    <h2 class="text-lg font-bold text-gray-800 mb-4">Abrir Caja</h2>
+    <form method="post" action="/page/caja/abrir" class="space-y-4">
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Monto Inicial</label>
+            <input type="number" step="0.01" name="monto_inicial" required value="0"
+                class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Notas (opcional)</label>
+            <textarea name="notas" rows="2"
+                class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
+        </div>
+        <button type="submit" class="bg-indigo-600 text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-indigo-700 transition">Abrir Caja</button>
+    </form>
+</div>
+{% endif %}
+
+<!-- Historial -->
+<div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+    <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+        <h2 class="text-sm font-bold text-gray-800">Historial de Cajas</h2>
+        <span class="bg-indigo-100 text-indigo-700 text-xs font-bold px-2.5 py-1 rounded-full">{{ historial|length }}</span>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+            <thead class="bg-gray-50 border-b border-gray-100">
+                <tr>
+                    <th class="px-4 py-3 text-xs font-bold text-gray-500 uppercase">ID</th>
+                    <th class="px-4 py-3 text-xs font-bold text-gray-500 uppercase">Apertura</th>
+                    <th class="px-4 py-3 text-xs font-bold text-gray-500 uppercase">Cierre</th>
+                    <th class="px-4 py-3 text-xs font-bold text-gray-500 uppercase">Inicial</th>
+                    <th class="px-4 py-3 text-xs font-bold text-gray-500 uppercase">Esperado</th>
+                    <th class="px-4 py-3 text-xs font-bold text-gray-500 uppercase">Real</th>
+                    <th class="px-4 py-3 text-xs font-bold text-gray-500 uppercase">Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for h in historial %}
+                <tr class="border-b border-gray-50 hover:bg-indigo-50/50 transition">
+                    <td class="px-4 py-3 text-gray-500">#{{ h.id }}</td>
+                    <td class="px-4 py-3 text-gray-600">{{ h.fecha_apertura.strftime('%d/%m/%Y %H:%M') if h.fecha_apertura else '—' }}</td>
+                    <td class="px-4 py-3 text-gray-600">{{ h.fecha_cierre.strftime('%d/%m/%Y %H:%M') if h.fecha_cierre else '—' }}</td>
+                    <td class="px-4 py-3 font-medium">${{ "%.2f" | format(h.monto_inicial) }}</td>
+                    <td class="px-4 py-3 font-medium">${{ "%.2f" | format(h.monto_final_esperado) if h.monto_final_esperado is not none else '—' }}</td>
+                    <td class="px-4 py-3 font-medium">${{ "%.2f" | format(h.monto_final_real) if h.monto_final_real is not none else '—' }}</td>
+                    <td class="px-4 py-3">
+                        <span class="inline-block bg-red-100 text-red-700 text-xs font-bold px-2 py-0.5 rounded-full">{{ h.estado }}</span>
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="7" class="px-4 py-6 text-center text-gray-400 text-sm">No hay cajas cerradas en el historial.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

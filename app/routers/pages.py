@@ -1,3 +1,4 @@
+import json
 from datetime import date, datetime, time
 from typing import Optional
 
@@ -7,11 +8,18 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.models.atencion import AtencionHistorial
+from app.models.caja import Caja
+from app.models.caja_movimiento import CajaMovimiento
 from app.models.cliente import Cliente
 from app.models.mascota import Mascota
+from app.models.producto import Producto
 from app.models.servicio import Servicio
-from app.models.atencion import AtencionHistorial
 from app.models.turno import Turno
+from app.models.venta import Venta
+from app.services.caja import abrir_caja, cerrar_caja, registrar_movimiento
+from app.services.dashboard import metricas, resumen_dia
+from app.services.ventas import crear_venta as crear_venta_svc
 
 router = APIRouter(prefix="/page", tags=["Pages"])
 templates = Jinja2Templates(directory="app/templates")
@@ -391,7 +399,7 @@ def page_atenciones(request: Request, db: Session = Depends(get_db)):
         })
     return templates.TemplateResponse(
         request=request,
-        mane="atenciones/listar.html",
+        name="atenciones/listar.html",
         context={"atenciones": atenciones}
     )
 
@@ -494,3 +502,308 @@ def actualizar_atencion_form(
         atencion.foto_despues_webp = foto_despues_webp
         db.commit()
     return RedirectResponse("/page/atenciones", status_code=303)
+
+
+# ── Productos / Stock ─────────────────────────────────────
+
+@router.get("/productos", response_class=HTMLResponse)
+def page_productos(
+    request: Request,
+    categoria: str | None = None,
+    busqueda: str | None = None,
+    db: Session = Depends(get_db),
+):
+    query = db.query(Producto).filter(Producto.activo == True)
+    if categoria:
+        query = query.filter(Producto.categoria == categoria)
+    if busqueda:
+        query = query.filter(Producto.nombre.ilike(f"%{busqueda}%"))
+    productos = query.order_by(Producto.nombre.asc()).all()
+    categorias_raw = db.query(Producto.categoria).filter(Producto.activo == True).distinct().all()
+    categorias = sorted([c[0] for c in categorias_raw if c[0]])
+    return templates.TemplateResponse(
+        request=request,
+        name="productos/listar.html",
+        context={
+            "productos": productos,
+            "categorias": categorias,
+            "categoria_actual": categoria or "",
+            "busqueda": busqueda or "",
+        },
+    )
+
+
+@router.get("/productos/nuevo", response_class=HTMLResponse)
+def page_producto_nuevo(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="productos/form.html",
+        context={"producto": None},
+    )
+
+
+@router.get("/productos/{producto_id}/editar", response_class=HTMLResponse)
+def page_producto_editar(producto_id: int, request: Request, db: Session = Depends(get_db)):
+    producto = db.query(Producto).filter(Producto.id == producto_id).first()
+    if not producto:
+        return RedirectResponse("/page/productos", status_code=303)
+    return templates.TemplateResponse(
+        request=request,
+        name="productos/form.html",
+        context={"producto": producto},
+    )
+
+
+@router.post("/productos/nuevo")
+def crear_producto_form(
+    nombre: str = Form(...),
+    descripcion: Optional[str] = Form(None),
+    precio_compra: float = Form(0.0),
+    precio_venta: float = Form(0.0),
+    stock_actual: int = Form(0),
+    stock_minimo: int = Form(0),
+    unidad_medida: str = Form("un"),
+    categoria: str = Form("GENERAL"),
+    db: Session = Depends(get_db),
+):
+    producto = Producto(
+        comercio_id=1, nombre=nombre, descripcion=descripcion,
+        precio_compra=precio_compra, precio_venta=precio_venta,
+        stock_actual=stock_actual, stock_minimo=stock_minimo,
+        unidad_medida=unidad_medida, categoria=categoria,
+    )
+    db.add(producto)
+    db.commit()
+    return RedirectResponse("/page/productos", status_code=303)
+
+
+@router.post("/productos/{producto_id}/editar")
+def actualizar_producto_form(
+    producto_id: int,
+    nombre: str = Form(...),
+    descripcion: Optional[str] = Form(None),
+    precio_compra: float = Form(0.0),
+    precio_venta: float = Form(0.0),
+    stock_actual: int = Form(0),
+    stock_minimo: int = Form(0),
+    unidad_medida: str = Form("un"),
+    categoria: str = Form("GENERAL"),
+    db: Session = Depends(get_db),
+):
+    producto = db.query(Producto).filter(Producto.id == producto_id).first()
+    if producto:
+        producto.nombre = nombre
+        producto.descripcion = descripcion
+        producto.precio_compra = precio_compra
+        producto.precio_venta = precio_venta
+        producto.stock_actual = stock_actual
+        producto.stock_minimo = stock_minimo
+        producto.unidad_medida = unidad_medida
+        producto.categoria = categoria
+        db.commit()
+    return RedirectResponse("/page/productos", status_code=303)
+
+
+@router.post("/productos/{producto_id}/stock")
+def ajustar_stock_form(
+    producto_id: int,
+    cantidad: int = Form(...),
+    db: Session = Depends(get_db),
+):
+    producto = db.query(Producto).filter(Producto.id == producto_id).first()
+    if producto:
+        nuevo = producto.stock_actual + cantidad
+        if nuevo >= 0:
+            producto.stock_actual = nuevo
+            db.commit()
+    return RedirectResponse("/page/productos", status_code=303)
+
+
+# ── POS / Punto de Venta ──────────────────────────────────
+
+@router.get("/pos", response_class=HTMLResponse)
+def page_pos(request: Request, db: Session = Depends(get_db)):
+    productos = db.query(Producto).filter(Producto.activo == True, Producto.stock_actual > 0).order_by(Producto.nombre.asc()).all()
+    servicios = db.query(Servicio).all()
+    clientes = db.query(Cliente).filter(Cliente.activo == True).order_by(Cliente.nombre.asc()).all()
+    caja_actual = (
+        db.query(Caja)
+        .filter(Caja.estado == "ABIERTA")
+        .order_by(Caja.fecha_apertura.desc())
+        .first()
+    )
+    return templates.TemplateResponse(
+        request=request,
+        name="pos/index.html",
+        context={
+            "productos": productos,
+            "servicios": servicios,
+            "clientes": clientes,
+            "caja_actual": caja_actual,
+        },
+    )
+
+
+@router.post("/pos/crear")
+def crear_venta_form(
+    cliente_id: Optional[int] = Form(None),
+    medio_pago: str = Form("efectivo"),
+    descuento: float = Form(0.0),
+    notas: Optional[str] = Form(None),
+    detalles_json: str = Form("[]"),
+    redirect_to: str = Form("/page/pos"),
+    db: Session = Depends(get_db),
+):
+    try:
+        detalles_raw = json.loads(detalles_json)
+    except json.JSONDecodeError:
+        return RedirectResponse("/page/pos?error=Datos invalidos", status_code=303)
+
+    from app.schemas.venta import VentaCreate, VentaDetalleCreate
+
+    detalles = []
+    for d in detalles_raw:
+        detalles.append(VentaDetalleCreate(
+            tipo=d.get("tipo", "PRODUCTO"),
+            producto_id=d.get("producto_id"),
+            servicio_id=d.get("servicio_id"),
+            cantidad=d.get("cantidad", 1),
+            precio_unitario=d.get("precio_unitario", 0.0),
+        ))
+
+    venta_data = VentaCreate(
+        cliente_id=cliente_id,
+        medio_pago=medio_pago,
+        descuento=descuento,
+        notas=notas,
+        detalles=detalles,
+    )
+
+    try:
+        crear_venta_svc(db, venta_data, usuario_id=1, comercio_id=1)
+    except Exception:
+        return RedirectResponse("/page/pos?error=Error al crear la venta", status_code=303)
+
+    return RedirectResponse(redirect_to + "?success=Venta registrada", status_code=303)
+
+
+# ── Caja Diaria ───────────────────────────────────────────
+
+@router.get("/caja", response_class=HTMLResponse)
+def page_caja(request: Request, db: Session = Depends(get_db)):
+    caja_actual = (
+        db.query(Caja)
+        .filter(Caja.estado == "ABIERTA")
+        .order_by(Caja.fecha_apertura.desc())
+        .first()
+    )
+    movimientos = []
+    total_ingresos = 0.0
+    total_egresos = 0.0
+    if caja_actual:
+        movimientos_raw = (
+            db.query(CajaMovimiento)
+            .filter(CajaMovimiento.caja_id == caja_actual.id)
+            .order_by(CajaMovimiento.creado_en.desc())
+            .all()
+        )
+        movimientos = movimientos_raw
+        total_ingresos = sum(m.monto for m in movimientos_raw if m.tipo == "INGRESO")
+        total_egresos = sum(m.monto for m in movimientos_raw if m.tipo == "EGRESO")
+
+    historial = (
+        db.query(Caja)
+        .filter(Caja.estado == "CERRADA")
+        .order_by(Caja.fecha_apertura.desc())
+        .limit(30)
+        .all()
+    )
+    return templates.TemplateResponse(
+        request=request,
+        name="caja/index.html",
+        context={
+            "caja_actual": caja_actual,
+            "movimientos": movimientos,
+            "total_ingresos": total_ingresos,
+            "total_egresos": total_egresos,
+            "historial": historial,
+        },
+    )
+
+
+@router.post("/caja/abrir")
+def abrir_caja_form(
+    monto_inicial: float = Form(0.0),
+    notas: Optional[str] = Form(None),
+    db: Session = Depends(get_db),
+):
+    try:
+        abrir_caja(db, comercio_id=1, usuario_id=1, monto_inicial=monto_inicial, notas=notas)
+        return RedirectResponse("/page/caja?success=Caja abierta", status_code=303)
+    except Exception as e:
+        msg = str(e.detail) if hasattr(e, "detail") else str(e)
+        return RedirectResponse(f"/page/caja?error={msg}", status_code=303)
+
+
+@router.post("/caja/movimiento")
+def registrar_movimiento_form(
+    tipo: str = Form("INGRESO"),
+    monto: float = Form(0.0),
+    descripcion: str = Form(""),
+    db: Session = Depends(get_db),
+):
+    caja = db.query(Caja).filter(Caja.estado == "ABIERTA").first()
+    if not caja:
+        return RedirectResponse("/page/caja?error=No hay caja abierta", status_code=303)
+    try:
+        registrar_movimiento(db, caja.id, tipo, monto, descripcion)
+        return RedirectResponse("/page/caja?success=Movimiento registrado", status_code=303)
+    except Exception as e:
+        msg = str(e.detail) if hasattr(e, "detail") else str(e)
+        return RedirectResponse(f"/page/caja?error={msg}", status_code=303)
+
+
+@router.post("/caja/cerrar")
+def cerrar_caja_form(
+    monto_final_real: float = Form(0.0),
+    notas: Optional[str] = Form(None),
+    db: Session = Depends(get_db),
+):
+    caja = db.query(Caja).filter(Caja.estado == "ABIERTA").first()
+    if not caja:
+        return RedirectResponse("/page/caja?error=No hay caja abierta", status_code=303)
+    try:
+        cerrar_caja(db, caja.id, usuario_id=1, monto_final_real=monto_final_real, notas=notas)
+        return RedirectResponse("/page/caja?success=Caja cerrada", status_code=303)
+    except Exception as e:
+        msg = str(e.detail) if hasattr(e, "detail") else str(e)
+        return RedirectResponse(f"/page/caja?error={msg}", status_code=303)
+
+
+# ── Dashboard Métricas ────────────────────────────────────
+
+@router.get("/dashboard", response_class=HTMLResponse)
+def page_dashboard(
+    request: Request,
+    fecha: str | None = None,
+    dias: int = 30,
+    db: Session = Depends(get_db),
+):
+    f = None
+    if fecha:
+        try:
+            f = date.fromisoformat(fecha)
+        except ValueError:
+            pass
+    resumen = resumen_dia(db, comercio_id=1, fecha=f)
+    met = metricas(db, comercio_id=1, dias=dias)
+    return templates.TemplateResponse(
+        request=request,
+        name="dashboard/index.html",
+        context={
+            "resumen": resumen,
+            "metricas": met,
+            "fecha_filtro": fecha or date.today().isoformat(),
+            "dias": dias,
+        },
+    )

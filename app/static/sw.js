@@ -1,4 +1,4 @@
-const CACHE_NAME = "servipet-v3";
+const CACHE_NAME = "servipet-v5";
 const STATIC_PREFIX = "/static/";
 
 const PRECACHE_URLS = [
