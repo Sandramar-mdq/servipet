@@ -32,8 +32,8 @@
             <button onclick="mostrarTab('servicios')" id="tab-servicios" class="px-4 py-2 rounded-xl text-sm font-bold bg-gray-100 text-gray-600 hover:bg-gray-200 transition">Servicios</button>
         </div>
 
-        <!-- Buscador -->
-        <input type="text" id="buscador" placeholder="Buscar..."
+        <!-- Buscador / Scanner -->
+        <input type="text" id="buscador" placeholder="Buscar o escanear codigo de barras..." autofocus
             oninput="filtrarItems()"
             class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 transition">
 
@@ -42,10 +42,20 @@
             {% for p in productos %}
             <button onclick="agregarItem('PRODUCTO', {{ p.id }}, '{{ p.nombre }}', {{ p.precio_venta }}, 1)"
                 class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 text-left hover:border-indigo-300 hover:shadow-md transition"
-                data-search="{{ p.nombre }}" data-tab="productos">
-                <div class="font-semibold text-sm text-gray-800 truncate">{{ p.nombre }}</div>
-                <div class="text-xs text-gray-500 mt-1">Stock: {{ p.stock_actual }}</div>
-                <div class="text-indigo-600 font-bold text-sm mt-2">${{ "%.2f" | format(p.precio_venta) }}</div>
+                data-search="{{ p.nombre }} {{ p.codigo or '' }} {{ p.marca or '' }}" data-codigo="{{ p.codigo or '' }}" data-tab="productos">
+                <div class="flex items-start gap-2">
+                    {% if p.imagen_url %}
+                    <img src="{{ p.imagen_url }}" alt="" class="w-10 h-10 rounded-lg object-cover border border-gray-100 shrink-0">
+                    {% else %}
+                    <div class="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xs shrink-0">{{ p.nombre[:2] }}</div>
+                    {% endif %}
+                    <div class="min-w-0 flex-1">
+                        <div class="font-semibold text-sm text-gray-800 truncate">{{ p.nombre }}</div>
+                        {% if p.codigo %}<div class="text-xs text-gray-400 font-mono truncate">{{ p.codigo }}</div>{% endif %}
+                        <div class="text-xs text-gray-500 mt-0.5">Stock: {{ p.stock_actual }}</div>
+                    </div>
+                </div>
+                <div class="text-indigo-600 font-bold text-sm mt-2">${{ "%.2f" | format(p.precio_venta) }}<span class="text-gray-400 text-xs font-normal">/{{ p.unidad_medida | lower }}</span></div>
             </button>
             {% else %}
             <p class="col-span-3 text-center text-gray-400 text-sm py-8">No hay productos disponibles.</p>
@@ -239,12 +249,24 @@ function mostrarTab(tab) {
 }
 
 function filtrarItems() {
-    var q = document.getElementById('buscador').value.toLowerCase();
+    var q = document.getElementById('buscador').value.toLowerCase().trim();
+    if (!q) {
+        document.querySelectorAll('[data-search]').forEach(function(el) { el.style.display = ''; });
+        return;
+    }
     var items = document.querySelectorAll('[data-search]');
+    var matchExacto = null;
     items.forEach(function(el) {
         var texto = el.getAttribute('data-search').toLowerCase();
+        var codigo = (el.getAttribute('data-codigo') || '').toLowerCase();
+        if (codigo === q) { matchExacto = el; }
         el.style.display = texto.indexOf(q) !== -1 ? '' : 'none';
     });
+    if (matchExacto && matchExacto.getAttribute('data-tab') === 'productos') {
+        matchExacto.click();
+        document.getElementById('buscador').value = '';
+        filtrarItems();
+    }
 }
 </script>
 {% endblock %}

@@ -14,24 +14,24 @@
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
     <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-5">
         <div class="text-sm text-gray-500 mb-1">Facturacion Total</div>
-        <div class="text-3xl font-bold text-indigo-600">${{ "%.2f" | format(resumen.facturacion_total) }}</div>
+        <div class="text-3xl font-bold text-indigo-600">${{ "%.2f" | format(resumen.facturacion_total | default(0)) }}</div>
     </div>
     <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-5">
         <div class="text-sm text-gray-500 mb-1">Servicios</div>
-        <div class="text-3xl font-bold text-emerald-600">${{ "%.2f" | format(resumen.facturacion_servicios) }}</div>
+        <div class="text-3xl font-bold text-emerald-600">${{ "%.2f" | format(resumen.facturacion_servicios | default(0)) }}</div>
     </div>
     <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-5">
         <div class="text-sm text-gray-500 mb-1">Productos</div>
-        <div class="text-3xl font-bold text-amber-600">${{ "%.2f" | format(resumen.facturacion_productos) }}</div>
+        <div class="text-3xl font-bold text-amber-600">${{ "%.2f" | format(resumen.facturacion_productos | default(0)) }}</div>
     </div>
     <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-5">
         <div class="text-sm text-gray-500 mb-1">Atenciones / Ventas</div>
-        <div class="text-3xl font-bold text-gray-800">{{ resumen.cantidad_atenciones }} / {{ resumen.cantidad_ventas }}</div>
+        <div class="text-3xl font-bold text-gray-800">{{ resumen.cantidad_atenciones | default(0) }} / {{ resumen.cantidad_ventas | default(0) }}</div>
     </div>
 </div>
 
 <!-- Metricas periodicas -->
-<h2 class="text-lg font-bold text-gray-800 mb-4">Metricas — {{ metricas.periodo }}</h2>
+<h2 class="text-lg font-bold text-gray-800 mb-4">Metricas — {{ metricas.periodo | default('') }}</h2>
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
     <!-- Servicios mas pedidos -->
@@ -40,7 +40,7 @@
             <h3 class="text-sm font-bold text-gray-800">Servicios mas pedidos</h3>
         </div>
         <div class="p-4">
-            {% for s in metricas.servicios_mas_pedidos %}
+            {% for s in metricas.servicios_mas_pedidos | default([]) %}
             <div class="flex items-center justify-between py-2 {% if not loop.last %}border-b border-gray-50{% endif %}">
                 <span class="text-sm text-gray-700">{{ s.servicio_nombre }}</span>
                 <span class="inline-block bg-indigo-100 text-indigo-700 text-xs font-bold px-2.5 py-0.5 rounded-full">{{ s.cantidad }}</span>
@@ -57,7 +57,7 @@
             <h3 class="text-sm font-bold text-gray-800">Horas pico</h3>
         </div>
         <div class="p-4">
-            {% for h in metricas.horas_pico %}
+            {% for h in metricas.horas_pico | default([]) %}
             <div class="flex items-center justify-between py-2 {% if not loop.last %}border-b border-gray-50{% endif %}">
                 <span class="text-sm text-gray-700">{{ "%02d:00" | format(h.hora) }}</span>
                 <span class="inline-block bg-amber-100 text-amber-700 text-xs font-bold px-2.5 py-0.5 rounded-full">{{ h.cantidad_turnos }} turnos</span>
@@ -74,7 +74,7 @@
             <h3 class="text-sm font-bold text-gray-800">Productos mas vendidos</h3>
         </div>
         <div class="p-4">
-            {% for p in metricas.productos_mas_vendidos %}
+            {% for p in metricas.productos_mas_vendidos | default([]) %}
             <div class="flex items-center justify-between py-2 {% if not loop.last %}border-b border-gray-50{% endif %}">
                 <div>
                     <span class="text-sm text-gray-700">{{ p.producto_nombre }}</span>

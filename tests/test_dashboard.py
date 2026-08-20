@@ -28,3 +28,17 @@ class TestDashboard:
     def test_no_auth(self, client):
         resp = client.get("/dashboard/resumen")
         assert resp.status_code == 401
+
+    def test_page_dashboard_renders(self, client):
+        resp = client.get("/page/dashboard")
+        assert resp.status_code == 200
+        assert "Dashboard de Metricas" in resp.text
+
+    def test_page_dashboard_with_fecha(self, client):
+        resp = client.get("/page/dashboard?fecha=2026-01-15")
+        assert resp.status_code == 200
+        assert "Dashboard de Metricas" in resp.text
+
+    def test_page_dashboard_with_dias(self, client):
+        resp = client.get("/page/dashboard?dias=7")
+        assert resp.status_code == 200

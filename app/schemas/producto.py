@@ -1,3 +1,5 @@
+from datetime import date
+
 from pydantic import BaseModel
 
 
@@ -8,8 +10,13 @@ class ProductoCreate(BaseModel):
     precio_venta: float = 0.0
     stock_actual: int = 0
     stock_minimo: int = 0
-    unidad_medida: str = "un"
+    unidad_medida: str = "UNIDAD"
     categoria: str = "GENERAL"
+    codigo: str | None = None
+    imagen_url: str | None = None
+    marca: str | None = None
+    proveedor: str | None = None
+    fecha_vencimiento: str | None = None
 
 
 class ProductoUpdate(BaseModel):
@@ -22,6 +29,11 @@ class ProductoUpdate(BaseModel):
     unidad_medida: str | None = None
     categoria: str | None = None
     activo: bool | None = None
+    codigo: str | None = None
+    imagen_url: str | None = None
+    marca: str | None = None
+    proveedor: str | None = None
+    fecha_vencimiento: str | None = None
 
 
 class ProductoResponse(BaseModel):
@@ -36,6 +48,11 @@ class ProductoResponse(BaseModel):
     unidad_medida: str
     categoria: str
     activo: bool
+    codigo: str | None = None
+    imagen_url: str | None = None
+    marca: str | None = None
+    proveedor: str | None = None
+    fecha_vencimiento: date | None = None
 
     model_config = {"from_attributes": True}
 

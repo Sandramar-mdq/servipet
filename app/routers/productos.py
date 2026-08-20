@@ -1,4 +1,7 @@
+from datetime import date
+
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -31,7 +34,10 @@ def listar_productos(
     if categoria:
         query = query.filter(Producto.categoria == categoria)
     if busqueda:
-        query = query.filter(Producto.nombre.ilike(f"%{busqueda}%"))
+        query = query.filter(or_(
+            Producto.nombre.ilike(f"%{busqueda}%"),
+            Producto.codigo.ilike(f"%{busqueda}%"),
+        ))
     return query.order_by(Producto.nombre.asc()).all()
 
 
@@ -41,7 +47,10 @@ def crear_producto(
     db: Session = Depends(get_db),
     user: Usuario = Depends(_admin),
 ):
-    producto = Producto(comercio_id=user.comercio_id, **data.model_dump())
+    payload = data.model_dump()
+    if payload.get("fecha_vencimiento") and isinstance(payload["fecha_vencimiento"], str):
+        payload["fecha_vencimiento"] = date.fromisoformat(payload["fecha_vencimiento"])
+    producto = Producto(comercio_id=user.comercio_id, **payload)
     db.add(producto)
     db.commit()
     db.refresh(producto)
@@ -70,7 +79,10 @@ def actualizar_producto(
     producto = db.query(Producto).filter(Producto.id == producto_id).first()
     if not producto:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
-    for key, value in data.model_dump(exclude_unset=True).items():
+    updates = data.model_dump(exclude_unset=True)
+    if "fecha_vencimiento" in updates and isinstance(updates["fecha_vencimiento"], str):
+        updates["fecha_vencimiento"] = date.fromisoformat(updates["fecha_vencimiento"])
+    for key, value in updates.items():
         setattr(producto, key, value)
     db.commit()
     db.refresh(producto)

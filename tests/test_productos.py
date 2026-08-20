@@ -77,3 +77,30 @@ class TestProductosCRUD:
         resp = client.get("/productos/?busqueda=Frontline", headers=admin_headers)
         assert len(resp.json()) == 1
         assert "Frontline" in resp.json()[0]["nombre"]
+
+    def test_campos_nuevos(self, client, admin_headers):
+        resp = client.post("/productos/", headers=admin_headers, json={
+            "nombre": "Shampoo Premium",
+            "precio_venta": 5000.0,
+            "codigo": "7891234567890",
+            "marca": "Petts",
+            "proveedor": "Distribuidora ABC",
+            "imagen_url": "https://example.com/shampoo.jpg",
+            "fecha_vencimiento": "2027-12-31",
+            "unidad_medida": "ML",
+        })
+        assert resp.status_code == 201
+        data = resp.json()
+        assert data["codigo"] == "7891234567890"
+        assert data["marca"] == "Petts"
+        assert data["proveedor"] == "Distribuidora ABC"
+        assert data["imagen_url"] == "https://example.com/shampoo.jpg"
+        assert data["fecha_vencimiento"] == "2027-12-31"
+        assert data["unidad_medida"] == "ML"
+
+    def test_busqueda_por_codigo(self, client, admin_headers):
+        client.post("/productos/", headers=admin_headers, json={"nombre": "Shampoo", "codigo": "SKU-SHAM-001"})
+        client.post("/productos/", headers=admin_headers, json={"nombre": "Jabon", "codigo": "SKU-JAB-002"})
+        resp = client.get("/productos/?busqueda=SKU-SHAM-001", headers=admin_headers)
+        assert len(resp.json()) == 1
+        assert resp.json()[0]["codigo"] == "SKU-SHAM-001"

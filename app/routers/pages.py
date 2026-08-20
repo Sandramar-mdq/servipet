@@ -1,5 +1,6 @@
 import json
 from datetime import date, datetime, time
+from sqlalchemy import or_
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Form, Request
@@ -517,7 +518,11 @@ def page_productos(
     if categoria:
         query = query.filter(Producto.categoria == categoria)
     if busqueda:
-        query = query.filter(Producto.nombre.ilike(f"%{busqueda}%"))
+        query = query.filter(or_(
+            Producto.nombre.ilike(f"%{busqueda}%"),
+            Producto.codigo.ilike(f"%{busqueda}%"),
+            Producto.marca.ilike(f"%{busqueda}%"),
+        ))
     productos = query.order_by(Producto.nombre.asc()).all()
     categorias_raw = db.query(Producto.categoria).filter(Producto.activo == True).distinct().all()
     categorias = sorted([c[0] for c in categorias_raw if c[0]])
@@ -562,15 +567,28 @@ def crear_producto_form(
     precio_venta: float = Form(0.0),
     stock_actual: int = Form(0),
     stock_minimo: int = Form(0),
-    unidad_medida: str = Form("un"),
+    unidad_medida: str = Form("UNIDAD"),
     categoria: str = Form("GENERAL"),
+    codigo: Optional[str] = Form(None),
+    imagen_url: Optional[str] = Form(None),
+    marca: Optional[str] = Form(None),
+    proveedor: Optional[str] = Form(None),
+    fecha_vencimiento: Optional[str] = Form(None),
     db: Session = Depends(get_db),
 ):
+    fv = None
+    if fecha_vencimiento:
+        try:
+            fv = date.fromisoformat(fecha_vencimiento)
+        except ValueError:
+            pass
     producto = Producto(
         comercio_id=1, nombre=nombre, descripcion=descripcion,
         precio_compra=precio_compra, precio_venta=precio_venta,
         stock_actual=stock_actual, stock_minimo=stock_minimo,
         unidad_medida=unidad_medida, categoria=categoria,
+        codigo=codigo, imagen_url=imagen_url, marca=marca,
+        proveedor=proveedor, fecha_vencimiento=fv,
     )
     db.add(producto)
     db.commit()
@@ -586,10 +604,21 @@ def actualizar_producto_form(
     precio_venta: float = Form(0.0),
     stock_actual: int = Form(0),
     stock_minimo: int = Form(0),
-    unidad_medida: str = Form("un"),
+    unidad_medida: str = Form("UNIDAD"),
     categoria: str = Form("GENERAL"),
+    codigo: Optional[str] = Form(None),
+    imagen_url: Optional[str] = Form(None),
+    marca: Optional[str] = Form(None),
+    proveedor: Optional[str] = Form(None),
+    fecha_vencimiento: Optional[str] = Form(None),
     db: Session = Depends(get_db),
 ):
+    fv = None
+    if fecha_vencimiento:
+        try:
+            fv = date.fromisoformat(fecha_vencimiento)
+        except ValueError:
+            pass
     producto = db.query(Producto).filter(Producto.id == producto_id).first()
     if producto:
         producto.nombre = nombre
@@ -600,6 +629,11 @@ def actualizar_producto_form(
         producto.stock_minimo = stock_minimo
         producto.unidad_medida = unidad_medida
         producto.categoria = categoria
+        producto.codigo = codigo
+        producto.imagen_url = imagen_url
+        producto.marca = marca
+        producto.proveedor = proveedor
+        producto.fecha_vencimiento = fv
         db.commit()
     return RedirectResponse("/page/productos", status_code=303)
 
@@ -795,8 +829,28 @@ def page_dashboard(
             f = date.fromisoformat(fecha)
         except ValueError:
             pass
-    resumen = resumen_dia(db, comercio_id=1, fecha=f)
-    met = metricas(db, comercio_id=1, dias=dias)
+    _resumen_default = {
+        "fecha": (f or date.today()).isoformat(),
+        "facturacion_servicios": 0.0,
+        "facturacion_productos": 0.0,
+        "facturacion_total": 0.0,
+        "cantidad_atenciones": 0,
+        "cantidad_ventas": 0,
+    }
+    _metricas_default = {
+        "periodo": f"ultimos {dias} dias",
+        "servicios_mas_pedidos": [],
+        "horas_pico": [],
+        "productos_mas_vendidos": [],
+    }
+    try:
+        resumen = resumen_dia(db, comercio_id=1, fecha=f)
+    except Exception:
+        resumen = _resumen_default
+    try:
+        met = metricas(db, comercio_id=1, dias=dias)
+    except Exception:
+        met = _metricas_default
     return templates.TemplateResponse(
         request=request,
         name="dashboard/index.html",

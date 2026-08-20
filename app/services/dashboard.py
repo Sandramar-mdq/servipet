@@ -85,11 +85,11 @@ def metricas(db: Session, comercio_id: int, dias: int = 30) -> dict:
 
     horas_pico = (
         db.query(
-            func.strftime("%H", Turno.fecha_hora).label("hora"),
+            func.extract("hour", Turno.fecha_hora).label("hora"),
             func.count(Turno.id).label("cnt"),
         )
         .filter(Turno.fecha_hora >= desde)
-        .group_by("hora")
+        .group_by(func.extract("hour", Turno.fecha_hora))
         .order_by(func.count(Turno.id).desc())
         .limit(5)
         .all()
