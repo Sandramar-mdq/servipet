@@ -24,7 +24,7 @@ from app.database import Base, SessionLocal, engine
 from app.routers import comercios, clientes, mascotas, servicios, atenciones
 from app.routers import client, client_auth, client_booking, admin_turnos
 from app.routers import auth, pages, portal
-from app.routers import health, productos, ventas, caja, dashboard
+from app.routers import health, public_portal, seed, productos, ventas, caja, dashboard
 
 from app.models import Comercio, Usuario, Cliente, ClienteOTP, Mascota, Servicio, AtencionHistorial, Turno  # noqa: F401
 
@@ -101,7 +101,9 @@ async def method_override(request: Request, call_next):
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
+app.include_router(seed.router)
 app.include_router(health.router)
+app.include_router(public_portal.router)
 app.include_router(comercios.router)
 app.include_router(clientes.router)
 app.include_router(mascotas.router)

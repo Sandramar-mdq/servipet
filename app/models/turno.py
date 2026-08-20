@@ -1,9 +1,14 @@
+import secrets
 from datetime import datetime
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
+
+
+def _generar_codigo_seguimiento() -> str:
+    return secrets.token_hex(4).upper()
 
 
 class Turno(Base):
@@ -18,6 +23,10 @@ class Turno(Base):
     estado: Mapped[str] = mapped_column(String(20), nullable=False, default="Pendiente")
     observaciones: Mapped[str | None] = mapped_column(Text, nullable=True)
     creado_en: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    codigo_seguimiento: Mapped[str] = mapped_column(
+        String(20), unique=True, index=True, nullable=False, default=_generar_codigo_seguimiento,
+    )
+    fase: Mapped[str | None] = mapped_column(String(20), nullable=True)
 
     cliente: Mapped["Cliente"] = relationship("Cliente", back_populates="turnos")  # noqa: F821
     mascota: Mapped["Mascota"] = relationship("Mascota", back_populates="turnos")  # noqa: F821

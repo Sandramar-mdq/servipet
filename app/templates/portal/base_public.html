@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>{% block title %}Servipet{% endblock %}</title>
+
+    <!-- PWA -->
+    <link rel="manifest" href="/static/manifest.json">
+    <link rel="icon" type="image/x-icon" href="/static/icons/favicon.ico">
+    <meta name="theme-color" content="#4F46E5">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Servipet">
+    <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        [x-cloak] { display: none !important; }
+        html { overscroll-behavior-y: none; }
+        body {
+            padding-top: env(safe-area-inset-top);
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+    <header class="bg-indigo-600 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-center">
+            <a href="/" class="text-xl font-bold tracking-tight">Servipet</a>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-6">
+        {% block content %}{% endblock %}
+    </main>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/static/sw.js').catch(function() {});
+        }
+    </script>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>
