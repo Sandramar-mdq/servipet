@@ -15,15 +15,17 @@ def get_current_user(
 ) -> Usuario:
     """Extrae y valida el JWT del usuario actual.
 
-    Busca el token prioritariamente en la cookie ``access_token`` y
-    secundariamente en el header ``Authorization: Bearer <token>``.
+    Busca el token prioritariamente en el header ``Authorization: Bearer <token>``
+    y secundariamente en la cookie ``access_token`` (portales web).
     """
-    token: str | None = request.cookies.get("access_token")
+    token: str | None = None
+
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.startswith("Bearer "):
+        token = auth_header[7:]
 
     if not token:
-        auth_header = request.headers.get("Authorization", "")
-        if auth_header.startswith("Bearer "):
-            token = auth_header[7:]
+        token = request.cookies.get("access_token")
 
     if not token:
         raise HTTPException(status_code=401, detail="No autenticado")

@@ -27,6 +27,12 @@ class Comercio(Base):
     porcentaje_recargo_tardio: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     permite_autoreserva_publica: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
+    # --- Red comunitaria (opt-in) ---
+    habilitar_red_comunitaria: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
     # --- Relaciones ---
     clientes: Mapped[list["Cliente"]] = relationship("Cliente", back_populates="comercio")  # noqa: F821
     usuarios: Mapped[list["Usuario"]] = relationship("Usuario", back_populates="comercio")  # noqa: F821
+    avisos_comunitarios: Mapped[list["AvisoComunitario"]] = relationship(  # noqa: F821
+        "AvisoComunitario", back_populates="comercio"
+    )

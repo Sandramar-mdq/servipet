@@ -1,6 +1,10 @@
 from pydantic import BaseModel
 
 
+class ComercioOptInRequest(BaseModel):
+    habilitar_red_comunitaria: bool
+
+
 class ComercioCreate(BaseModel):
     nombre: str
     tipo_comercio: str = "MULTIRRUBRO"
@@ -15,6 +19,7 @@ class ComercioCreate(BaseModel):
     horas_limite_cancelacion: int = 24
     porcentaje_recargo_tardio: float = 0.0
     permite_autoreserva_publica: bool = True
+    habilitar_red_comunitaria: bool = False
 
 
 class ComercioUpdate(BaseModel):
@@ -31,6 +36,7 @@ class ComercioUpdate(BaseModel):
     horas_limite_cancelacion: int | None = None
     porcentaje_recargo_tardio: float | None = None
     permite_autoreserva_publica: bool | None = None
+    habilitar_red_comunitaria: bool | None = None
 
 
 class ComercioResponse(BaseModel):
@@ -48,5 +54,6 @@ class ComercioResponse(BaseModel):
     horas_limite_cancelacion: int
     porcentaje_recargo_tardio: float
     permite_autoreserva_publica: bool
+    habilitar_red_comunitaria: bool = False
 
     model_config = {"from_attributes": True}

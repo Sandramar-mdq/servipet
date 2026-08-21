@@ -1,0 +1,176 @@
+{% extends "cliente/base_client.html" %}
+
+{% block title %}Comunidad - Servipet{% endblock %}
+
+{% block content %}
+
+<!-- Datos para JS -->
+<div id="comunidad-data"
+     data-comercio-id="{{ comercio.id if comercio else 1 }}"
+     data-telefono-comercio="{{ comercio.telefono or '' }}"
+     data-actor='{{ actor | tojson }}'></div>
+
+<!-- Encabezado -->
+<div class="flex items-center justify-between gap-3 mb-4">
+    <div class="min-w-0">
+        <h1 class="text-2xl font-bold text-gray-800 leading-tight">Comunidad</h1>
+        <p class="text-sm text-gray-500 truncate">{{ comercio.nombre if comercio else "Servipet" }}</p>
+    </div>
+    {% if actor.tipo %}
+    <button id="btn-nuevo-aviso"
+            class="shrink-0 bg-indigo-600 text-white px-4 py-2.5 rounded-2xl text-sm font-semibold shadow-md hover:bg-indigo-700 active:bg-indigo-800 transition">
+        + Nuevo aviso
+    </button>
+    {% else %}
+    <a href="/cliente/login"
+       class="shrink-0 bg-indigo-600 text-white px-4 py-2.5 rounded-2xl text-sm font-semibold shadow-md hover:bg-indigo-700 active:bg-indigo-800 transition">
+        Iniciar sesión
+    </a>
+    {% endif %}
+</div>
+
+<!-- Filtros por tipo -->
+<div id="filtros" class="flex gap-2 overflow-x-auto pb-2 mb-4 -mx-1 px-1" role="tablist" aria-label="Filtrar avisos">
+    <button data-tipo="TODOS" class="filtro-tab shrink-0 px-4 py-2 rounded-full text-sm font-medium border transition active:opacity-70 bg-indigo-600 text-white border-indigo-600">Todos</button>
+    <button data-tipo="PERDIDA" class="filtro-tab shrink-0 px-4 py-2 rounded-full text-sm font-medium border transition active:opacity-70 bg-white text-gray-600 border-gray-300">Perdidos</button>
+    <button data-tipo="ENCONTRADA" class="filtro-tab shrink-0 px-4 py-2 rounded-full text-sm font-medium border transition active:opacity-70 bg-white text-gray-600 border-gray-300">Encontrados</button>
+    <button data-tipo="ADOPCION" class="filtro-tab shrink-0 px-4 py-2 rounded-full text-sm font-medium border transition active:opacity-70 bg-white text-gray-600 border-gray-300">Adopción</button>
+    <button data-tipo="CUMPLEAÑOS" class="filtro-tab shrink-0 px-4 py-2 rounded-full text-sm font-medium border transition active:opacity-70 bg-white text-gray-600 border-gray-300">Cumpleaños</button>
+    <button data-tipo="AVISO_BARRIAL" class="filtro-tab shrink-0 px-4 py-2 rounded-full text-sm font-medium border transition active:opacity-70 bg-white text-gray-600 border-gray-300">Barrio</button>
+</div>
+
+<!-- Estado: cargando -->
+<div id="feed-cargando" class="py-12 text-center text-gray-400 text-sm">
+    <svg class="animate-spin w-8 h-8 mx-auto mb-3 text-indigo-500" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+    </svg>
+    Cargando avisos...
+</div>
+
+<!-- Estado: red comunitaria deshabilitada -->
+<div id="feed-deshabilitado" class="hidden bg-white border border-indigo-100 rounded-2xl p-8 text-center shadow-sm">
+    <div class="text-5xl mb-4">📢</div>
+    <h2 class="text-lg font-bold text-gray-800 mb-2">La red comunitaria todavía no está activada</h2>
+    <p class="text-sm text-gray-500 leading-relaxed max-w-xs mx-auto">
+        Cuando {{ comercio.nombre if comercio else "tu comercio" }} habilite la comunidad,
+        vas a poder ver avisos de mascotas perdidas, encontradas, adopciones y más.
+    </p>
+</div>
+
+<!-- Estado: sin avisos -->
+<div id="feed-vacio" class="hidden bg-white border border-gray-200 rounded-2xl p-8 text-center shadow-sm">
+    <div class="text-5xl mb-4">🐾</div>
+    <h2 class="text-lg font-bold text-gray-800 mb-2">Todavía no hay avisos</h2>
+    <p class="text-sm text-gray-500 leading-relaxed max-w-xs mx-auto">
+        Sé el primero en publicar un aviso para ayudar a la comunidad.
+    </p>
+    {% if actor.tipo %}
+    <button type="button" onclick="abrirModalAviso()"
+            class="mt-4 bg-indigo-600 text-white px-5 py-2.5 rounded-2xl text-sm font-semibold hover:bg-indigo-700 active:bg-indigo-800 transition">
+        Publicar el primer aviso
+    </button>
+    {% endif %}
+</div>
+
+<!-- Lista de avisos -->
+<div id="feed-lista" class="space-y-4"></div>
+
+<!-- Paginación -->
+<button id="btn-cargar-mas" class="hidden w-full mt-4 bg-white border border-indigo-200 text-indigo-600 font-semibold py-3 rounded-2xl text-sm hover:bg-indigo-50 active:bg-indigo-100 transition">
+    Cargar más avisos
+</button>
+
+<!-- Modal nuevo aviso -->
+<div id="modal-aviso" class="hidden fixed inset-0 z-[60]" role="dialog" aria-modal="true" aria-labelledby="modal-titulo">
+    <div class="absolute inset-0 bg-black/50" data-cerrar-modal></div>
+    <div class="absolute inset-x-0 bottom-0 sm:bottom-auto sm:inset-x-4 sm:top-1/2 sm:-translate-y-1/2 sm:max-w-lg sm:mx-auto">
+        <div class="bg-white rounded-t-3xl sm:rounded-3xl p-5 max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div class="flex items-center justify-between mb-4">
+                <h2 id="modal-titulo" class="text-lg font-bold text-gray-800">Nuevo aviso</h2>
+                <button type="button" data-cerrar-modal aria-label="Cerrar"
+                        class="p-2 -mr-2 text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+            </div>
+
+            <form id="form-nuevo-aviso" class="space-y-4">
+                <div>
+                    <label for="aviso-titulo" class="block text-sm font-medium text-gray-700 mb-1">Título *</label>
+                    <input id="aviso-titulo" name="titulo" type="text" required maxlength="100"
+                           placeholder="Ej: Se perdió Firulais"
+                           class="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                </div>
+
+                <div>
+                    <label for="aviso-descripcion" class="block text-sm font-medium text-gray-700 mb-1">Descripción *</label>
+                    <textarea id="aviso-descripcion" name="descripcion" required rows="3"
+                              placeholder="Contá los detalles: zona, señas particulares, cómo ayudar..."
+                              class="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"></textarea>
+                </div>
+
+                <div>
+                    <label for="aviso-tipo" class="block text-sm font-medium text-gray-700 mb-1">Tipo de aviso *</label>
+                    <select id="aviso-tipo" name="tipo" required
+                            class="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                        <option value="PERDIDA">Mascota perdida</option>
+                        <option value="ENCONTRADA">Mascota encontrada</option>
+                        <option value="ADOPCION">Adopción</option>
+                        <option value="CUMPLEAÑOS">Cumpleaños</option>
+                        <option value="AVISO_BARRIAL">Aviso barrial</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="aviso-imagen" class="block text-sm font-medium text-gray-700 mb-1">Foto (opcional)</label>
+                    <input id="aviso-imagen" name="imagen" type="file" accept="image/*"
+                           class="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-600 hover:file:bg-indigo-100">
+                </div>
+
+                <div>
+                    <span class="block text-sm font-medium text-gray-700 mb-1">¿Cómo quieren contactarte?</span>
+                    <div class="grid grid-cols-1 gap-2">
+                        <label class="flex items-start gap-2 border border-gray-300 rounded-xl px-3 py-2.5 cursor-pointer has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50">
+                            <input type="radio" name="tipo_contacto" value="VIA_COMERCIO" checked class="mt-0.5 accent-indigo-600">
+                            <span class="text-sm">
+                                <span class="font-medium text-gray-800">A través del comercio</span>
+                                <span class="block text-xs text-gray-500">Tu teléfono queda privado.</span>
+                            </span>
+                        </label>
+                        <label class="flex items-start gap-2 border border-gray-300 rounded-xl px-3 py-2.5 cursor-pointer has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50">
+                            <input type="radio" name="tipo_contacto" value="DIRECTO_WHATSAPP" class="mt-0.5 accent-indigo-600">
+                            <span class="text-sm">
+                                <span class="font-medium text-gray-800">WhatsApp directo</span>
+                                <span class="block text-xs text-gray-500">Tu número será visible en el aviso.</span>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+
+                <div id="campo-telefono" class="hidden">
+                    <label for="aviso-telefono" class="block text-sm font-medium text-gray-700 mb-1">Teléfono de WhatsApp *</label>
+                    <input id="aviso-telefono" name="telefono_contacto" type="tel"
+                           placeholder="Ej: 5491122334455"
+                           class="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                </div>
+
+                <p id="modal-error" class="hidden text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2"></p>
+
+                <div class="flex gap-2 pt-1">
+                    <button type="button" data-cerrar-modal
+                            class="flex-1 border border-gray-300 text-gray-600 font-semibold py-3 rounded-2xl text-sm hover:bg-gray-50 active:bg-gray-100 transition">
+                        Cancelar
+                    </button>
+                    <button type="submit" id="btn-publicar"
+                            class="flex-1 bg-indigo-600 text-white font-semibold py-3 rounded-2xl text-sm hover:bg-indigo-700 active:bg-indigo-800 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                        Publicar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/comunidad.js"></script>
+{% endblock %}

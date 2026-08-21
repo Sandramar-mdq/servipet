@@ -8,5 +8,7 @@ python-multipart
 psycopg2-binary
 bcrypt
 PyJWT
+cloudinary
+alembic
 pytest
 httpx

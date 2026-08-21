@@ -50,3 +50,49 @@ def seed_turno_test(db: Session = Depends(get_db)):
         "codigo": turno.codigo_seguimiento,
         "url": f"/portal/seguimiento/{turno.codigo_seguimiento}",
     }
+
+
+@router.get("/seed/admin-test")
+def seed_admin_test(db: Session = Depends(get_db)):
+    """Siembra un usuario ADMIN de prueba para testing visual local.
+
+    Idempotente: crea el comercio id=1 y el usuario admin@test.com solo si
+    no existen. Pensado para desarrollo; no exponer en produccion.
+    """
+    from app.models.comercio import Comercio
+    from app.models.usuario import Usuario
+    from app.services.auth import hash_password
+
+    comercio = db.query(Comercio).filter(Comercio.id == 1).first()
+    if not comercio:
+        comercio = Comercio(
+            id=1,
+            nombre="Comercio Principal / Demo",
+            tipo_comercio="MULTIRRUBRO",
+            activo=True,
+        )
+        db.add(comercio)
+        db.flush()
+
+    usuario = db.query(Usuario).filter(Usuario.email == "admin@test.com").first()
+    creado = False
+    if not usuario:
+        usuario = Usuario(
+            email="admin@test.com",
+            password_hash=hash_password("admin123"),
+            rol="ADMIN",
+            comercio_id=comercio.id,
+            activo=True,
+        )
+        db.add(usuario)
+        creado = True
+    db.commit()
+
+    return {
+        "ok": True,
+        "creado": creado,
+        "credenciales": {"email": "admin@test.com", "password": "admin123"},
+        "login_api": "POST /auth/login {\"email\": ..., \"password\": ...}",
+        "panel_admin": "/page/dashboard",
+        "comunidad_admin": "/admin/comunidad",
+    }

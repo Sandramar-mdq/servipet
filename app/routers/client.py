@@ -1,11 +1,15 @@
-from fastapi import APIRouter, Depends, Request
+from types import SimpleNamespace
+
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.dependencies import get_current_client
+from app.dependencies.auth import get_current_user
 from app.models.cliente import Cliente
+from app.models.comercio import Comercio
 from app.models.mascota import Mascota
 from app.models.atencion import AtencionHistorial
 
@@ -95,3 +99,56 @@ def historial(request: Request, cliente: Cliente = Depends(get_current_client), 
 @router.get("/panel")
 def panel_redirect():
     return RedirectResponse("/cliente/dashboard", status_code=301)
+
+
+@router.get("/comunidad", response_class=HTMLResponse)
+def pagina_comunidad(request: Request, db: Session = Depends(get_db)):
+    """Feed comunitario de la PWA. Publico: identifica al actor si hay sesion.
+
+    - Cliente PWA (cookie cliente_session) o staff (cookie/JWT access_token).
+    - Anonimo: ve el feed con CTA para iniciar sesion.
+    """
+    actor = {"tipo": None, "cliente_id": None, "usuario_id": None, "es_staff": False}
+    comercio_id = 1
+
+    try:
+        cliente = get_current_client(request, db)
+        actor["tipo"] = "cliente"
+        actor["cliente_id"] = cliente.id
+        comercio_id = cliente.comercio_id or 1
+    except HTTPException:
+        try:
+            usuario = get_current_user(request, db)
+            actor["tipo"] = "usuario"
+            actor["usuario_id"] = usuario.id
+            actor["es_staff"] = usuario.rol in ("ADMIN", "EMPLEADO")
+            comercio_id = usuario.comercio_id or 1
+        except HTTPException:
+            pass
+
+    comercio = None
+    try:
+        comercio = db.query(Comercio).filter(Comercio.id == comercio_id).first()
+    except Exception:
+        # BD recien inicializada o esquema desactualizado: no romper la pagina.
+        db.rollback()
+        comercio = None
+
+    if comercio is None:
+        # Fallback amable para que la plantilla renderice igual;
+        # el feed de JS mostrara su empty state si el comercio no existe.
+        comercio = SimpleNamespace(
+            id=comercio_id,
+            nombre="Servipet",
+            telefono="",
+            habilitar_red_comunitaria=False,
+        )
+
+    return templates.TemplateResponse(
+        request=request,
+        name="cliente/comunidad.html",
+        context={
+            "comercio": comercio,
+            "actor": actor,
+        },
+    )

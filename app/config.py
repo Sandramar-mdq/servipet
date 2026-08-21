@@ -12,6 +12,11 @@ class Settings(BaseSettings):
     TWILIO_FROM: str | None = None
     TURSO_AUTH_TOKEN: str | None = None
 
+    # Cloudinary (red comunitaria - fotos de avisos)
+    CLOUDINARY_CLOUD_NAME: str | None = None
+    CLOUDINARY_API_KEY: str | None = None
+    CLOUDINARY_API_SECRET: str | None = None
+
     # JWT settings
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 días
