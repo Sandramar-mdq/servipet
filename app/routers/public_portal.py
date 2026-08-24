@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
+from app.core.templating import get_templates
 from app.database import get_db
 from app.models.turno import Turno
 
 router = APIRouter(tags=["Portal Publico"])
-templates = Jinja2Templates(directory="app/templates")
+templates = get_templates()
 
 FASE_LABELS = {
     "ESPERA": "En Espera",

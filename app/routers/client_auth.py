@@ -2,9 +2,9 @@ from urllib.parse import urlencode
 
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
+from app.core.templating import get_templates
 from app.database import get_db
 from app.dependencies import COOKIE_SESION
 from app.models.cliente import Cliente
@@ -12,7 +12,7 @@ from app.services.auth_tokens import crear_token
 from app.services.otp_service import crear_otp, validar_otp
 
 router = APIRouter(prefix="/cliente", tags=["Cliente Auth"])
-templates = Jinja2Templates(directory="app/templates")
+templates = get_templates()
 
 COOKIE_MAX_AGE = 60 * 60 * 24 * 30
 

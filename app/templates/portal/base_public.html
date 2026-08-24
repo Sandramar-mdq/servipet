@@ -8,7 +8,7 @@
     <!-- PWA -->
     <link rel="manifest" href="/static/manifest.json">
     <link rel="icon" type="image/x-icon" href="/static/icons/favicon.ico">
-    <meta name="theme-color" content="#4F46E5">
+    <meta name="theme-color" content="{{ comercio.color_primario }}">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Servipet">
@@ -16,7 +16,15 @@
 
     <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/static/css/a11y.css">
     <style>
+        :root {
+            --color-primario: {{ comercio.color_primario }};
+            --color-secundario: {{ comercio.color_secundario }};
+            --texto-sobre-primario: {{ skin.texto_sobre_primario }};
+            --texto-sobre-secundario: {{ skin.texto_sobre_secundario }};
+        }
+
         [x-cloak] { display: none !important; }
         html { overscroll-behavior-y: none; }
         body {
@@ -26,9 +34,9 @@
         }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-gray-100 min-h-screen {% if comercio.a11y_dyslexic %}a11y-dyslexic{% endif %}" data-a11y-modo="{{ comercio.a11y_modo }}" data-tema="{{ comercio.tema_preset }}">
 
-    <header class="bg-indigo-600 text-white shadow-lg">
+    <header class="bg-[var(--color-primario)] text-[var(--texto-sobre-primario)] shadow-lg">
         <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-center">
             <a href="/" class="text-xl font-bold tracking-tight">Servipet</a>
         </div>

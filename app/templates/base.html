@@ -8,7 +8,7 @@
     <!-- PWA -->
     <link rel="manifest" href="/static/manifest.json">
     <link rel="icon" type="image/x-icon" href="/static/icons/favicon.ico">
-    <meta name="theme-color" content="#4F46E5">
+    <meta name="theme-color" content="{{ comercio.color_primario }}">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Servipet">
@@ -17,7 +17,15 @@
 
     <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/static/css/a11y.css">
     <style>
+        :root {
+            --color-primario: {{ comercio.color_primario }};
+            --color-secundario: {{ comercio.color_secundario }};
+            --texto-sobre-primario: {{ skin.texto_sobre_primario }};
+            --texto-sobre-secundario: {{ skin.texto_sobre_secundario }};
+        }
+
         [x-cloak] { display: none !important; }
         html { overscroll-behavior-y: none; }
         body {
@@ -37,26 +45,27 @@
         }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-gray-100 min-h-screen {% if comercio.a11y_dyslexic %}a11y-dyslexic{% endif %}" data-a11y-modo="{{ comercio.a11y_modo }}" data-tema="{{ comercio.tema_preset }}">
 
     <!-- Navbar mobile-first -->
-    <nav class="bg-indigo-600 text-white shadow-lg sticky top-0 z-50">
+    <nav class="bg-[var(--color-primario)] text-[var(--texto-sobre-primario)] shadow-lg sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
             <a href="/" class="text-xl font-bold tracking-tight">Servipet</a>
 
             <!-- Desktop nav -->
             <div class="hidden md:flex gap-4 text-sm font-medium">
-                <a href="/page/turnos" class="hover:text-indigo-200 transition">Turnos</a>
-                <a href="/page/clientes" class="hover:text-indigo-200 transition">Clientes</a>
-                <a href="/page/mascotas" class="hover:text-indigo-200 transition">Mascotas</a>
-                <a href="/page/servicios" class="hover:text-indigo-200 transition">Servicios</a>
-                <a href="/page/atenciones" class="hover:text-indigo-200 transition">Atenciones</a>
-                <span class="w-px h-5 bg-indigo-400 self-center"></span>
-                <a href="/page/pos" class="hover:text-indigo-200 transition text-emerald-300 font-bold">POS</a>
-                <a href="/page/productos" class="hover:text-indigo-200 transition">Productos</a>
-                <a href="/page/caja" class="hover:text-indigo-200 transition">Caja</a>
-                <a href="/page/dashboard" class="hover:text-indigo-200 transition">Dashboard</a>
-                <a href="/admin/comunidad" class="hover:text-indigo-200 transition">Comunidad</a>
+                <a href="/page/turnos" class="hover:opacity-80 transition">Turnos</a>
+                <a href="/page/clientes" class="hover:opacity-80 transition">Clientes</a>
+                <a href="/page/mascotas" class="hover:opacity-80 transition">Mascotas</a>
+                <a href="/page/servicios" class="hover:opacity-80 transition">Servicios</a>
+                <a href="/page/atenciones" class="hover:opacity-80 transition">Atenciones</a>
+                <span class="w-px h-5 bg-current opacity-30 self-center"></span>
+                <a href="/page/pos" class="hover:opacity-80 transition"><span class="bg-[var(--color-secundario)] text-[var(--texto-sobre-secundario)] px-2 py-0.5 rounded-full font-bold">POS</span></a>
+                <a href="/page/productos" class="hover:opacity-80 transition">Productos</a>
+                <a href="/page/caja" class="hover:opacity-80 transition">Caja</a>
+                <a href="/page/dashboard" class="hover:opacity-80 transition">Dashboard</a>
+                <a href="/admin/personalizacion" class="hover:opacity-80 transition">Branding</a>
+                <a href="/admin/comunidad" class="hover:opacity-80 transition">Comunidad</a>
             </div>
 
             <!-- Mobile hamburger -->
@@ -64,18 +73,19 @@
         </div>
 
         <!-- Mobile menu -->
-        <div id="mobile-menu" class="hidden md:hidden border-t border-indigo-500 px-4 pb-3 space-y-2 text-sm font-medium">
-            <a href="/page/turnos" class="block py-2.5 hover:text-indigo-200 transition active:opacity-70">Turnos</a>
-            <a href="/page/clientes" class="block py-2.5 hover:text-indigo-200 transition active:opacity-70">Clientes</a>
-            <a href="/page/mascotas" class="block py-2.5 hover:text-indigo-200 transition active:opacity-70">Mascotas</a>
-            <a href="/page/servicios" class="block py-2.5 hover:text-indigo-200 transition active:opacity-70">Servicios</a>
-            <a href="/page/atenciones" class="block py-2.5 hover:text-indigo-200 transition active:opacity-70">Atenciones</a>
-            <div class="border-t border-indigo-400 my-1"></div>
-            <a href="/page/pos" class="block py-2.5 text-emerald-300 font-bold hover:text-indigo-200 transition active:opacity-70">POS / Cobro</a>
-            <a href="/page/productos" class="block py-2.5 hover:text-indigo-200 transition active:opacity-70">Productos / Stock</a>
-            <a href="/page/caja" class="block py-2.5 hover:text-indigo-200 transition active:opacity-70">Caja Diaria</a>
-            <a href="/page/dashboard" class="block py-2.5 hover:text-indigo-200 transition active:opacity-70">Dashboard</a>
-            <a href="/admin/comunidad" class="block py-2.5 hover:text-indigo-200 transition active:opacity-70">Comunidad / Red Social</a>
+        <div id="mobile-menu" class="hidden md:hidden border-t px-4 pb-3 space-y-2 text-sm font-medium" style="border-top-color: color-mix(in srgb, var(--texto-sobre-primario) 30%, transparent);">
+            <a href="/page/turnos" class="block py-2.5 hover:opacity-80 transition active:opacity-70">Turnos</a>
+            <a href="/page/clientes" class="block py-2.5 hover:opacity-80 transition active:opacity-70">Clientes</a>
+            <a href="/page/mascotas" class="block py-2.5 hover:opacity-80 transition active:opacity-70">Mascotas</a>
+            <a href="/page/servicios" class="block py-2.5 hover:opacity-80 transition active:opacity-70">Servicios</a>
+            <a href="/page/atenciones" class="block py-2.5 hover:opacity-80 transition active:opacity-70">Atenciones</a>
+            <div class="border-t my-1" style="border-top-color: color-mix(in srgb, var(--texto-sobre-primario) 30%, transparent);"></div>
+            <a href="/page/pos" class="block py-2.5 hover:opacity-80 transition active:opacity-70"><span class="bg-[var(--color-secundario)] text-[var(--texto-sobre-secundario)] px-2 py-0.5 rounded-full font-bold">POS / Cobro</span></a>
+            <a href="/page/productos" class="block py-2.5 hover:opacity-80 transition active:opacity-70">Productos / Stock</a>
+            <a href="/page/caja" class="block py-2.5 hover:opacity-80 transition active:opacity-70">Caja Diaria</a>
+            <a href="/page/dashboard" class="block py-2.5 hover:opacity-80 transition active:opacity-70">Dashboard</a>
+            <a href="/admin/personalizacion" class="block py-2.5 hover:opacity-80 transition active:opacity-70">Branding / Accesibilidad</a>
+            <a href="/admin/comunidad" class="block py-2.5 hover:opacity-80 transition active:opacity-70">Comunidad / Red Social</a>
         </div>
     </nav>
 
@@ -107,7 +117,7 @@
                 </div>
             </div>
             <div class="flex items-center gap-1 shrink-0">
-                <button id="install-btn" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-indigo-700 active:bg-indigo-800 transition">Instalar</button>
+                <button id="install-btn" class="bg-[var(--color-primario)] text-[var(--texto-sobre-primario)] px-4 py-2 rounded-xl text-sm font-medium hover:opacity-90 active:opacity-80 transition">Instalar</button>
                 <button id="install-dismiss" aria-label="Descartar aviso" class="text-gray-400 hover:text-gray-600 p-2 rounded-lg transition text-lg leading-none">&times;</button>
             </div>
         </div>

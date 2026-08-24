@@ -1,0 +1,157 @@
+@font-face {
+    font-family: "OpenDyslexic";
+    src: url("../fonts/OpenDyslexic-Regular.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "OpenDyslexic";
+    src: url("../fonts/OpenDyslexic-Bold.woff2") format("woff2");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "OpenDyslexic";
+    src: url("../fonts/OpenDyslexic-Italic.woff2") format("woff2");
+    font-weight: 400;
+    font-style: italic;
+    font-display: swap;
+}
+
+body.a11y-dyslexic,
+.a11y-preview.a11y-dyslexic {
+    font-family: "OpenDyslexic", Verdana, Tahoma, sans-serif !important;
+    letter-spacing: 0.02em;
+    word-spacing: 0.08em;
+    line-height: 1.6;
+}
+
+body.a11y-dyslexic button,
+body.a11y-dyslexic input,
+body.a11y-dyslexic select,
+body.a11y-dyslexic textarea,
+body.a11y-dyslexic optgroup,
+body.a11y-dyslexic option,
+.a11y-preview.a11y-dyslexic button,
+.a11y-preview.a11y-dyslexic input,
+.a11y-preview.a11y-dyslexic select,
+.a11y-preview.a11y-dyslexic textarea {
+    font-family: inherit;
+}
+
+[data-a11y-modo="alto_contraste"] {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+}
+
+[data-a11y-modo="alto_contraste"] nav,
+[data-a11y-modo="alto_contraste"] header,
+[data-a11y-modo="alto_contraste"] footer {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+    border-bottom-color: #ffffff !important;
+}
+
+[data-a11y-modo="alto_contraste"] .bg-white,
+[data-a11y-modo="alto_contraste"] .bg-gray-50,
+[data-a11y-modo="alto_contraste"] .bg-gray-100,
+[data-a11y-modo="alto_contraste"] .bg-gray-200,
+[data-a11y-modo="alto_contraste"] .bg-gray-300 {
+    background-color: #000000 !important;
+}
+
+[data-a11y-modo="alto_contraste"] .text-gray-300,
+[data-a11y-modo="alto_contraste"] .text-gray-400,
+[data-a11y-modo="alto_contraste"] .text-gray-500,
+[data-a11y-modo="alto_contraste"] .text-gray-600,
+[data-a11y-modo="alto_contraste"] .text-gray-700,
+[data-a11y-modo="alto_contraste"] .text-gray-800,
+[data-a11y-modo="alto_contraste"] .text-gray-900,
+[data-a11y-modo="alto_contraste"] .text-green-600,
+[data-a11y-modo="alto_contraste"] .text-green-700,
+[data-a11y-modo="alto_contraste"] .text-red-600,
+[data-a11y-modo="alto_contraste"] .text-red-700 {
+    color: #ffffff !important;
+}
+
+[data-a11y-modo="alto_contraste"] a:not(.border):not([class*="rounded"]) {
+    color: #ffff00 !important;
+    text-decoration: underline !important;
+}
+
+[data-a11y-modo="alto_contraste"] button,
+[data-a11y-modo="alto_contraste"] input,
+[data-a11y-modo="alto_contraste"] select,
+[data-a11y-modo="alto_contraste"] textarea {
+    background-color: #000000 !important;
+    color: #ffd700 !important;
+    border: 2px solid #ffffff !important;
+}
+
+[data-a11y-modo="alto_contraste"] button[type="submit"],
+[data-a11y-modo="alto_contraste"] [role="button"] {
+    color: #000000 !important;
+    background-color: #ffd700 !important;
+    border: 2px solid #ffffff !important;
+    font-weight: 700 !important;
+}
+
+[data-a11y-modo="alto_contraste"] img,
+[data-a11y-modo="alto_contraste"] video {
+    filter: contrast(1.15);
+}
+
+[data-a11y-modo="alto_contraste"] *:focus-visible {
+    outline: 3px solid #ffff00 !important;
+    outline-offset: 2px !important;
+}
+
+[data-a11y-modo="daltonismo"] a {
+    text-decoration: underline !important;
+}
+
+[data-a11y-modo="daltonismo"] *:focus-visible {
+    outline: 3px solid currentColor !important;
+    outline-offset: 2px !important;
+}
+
+[data-a11y-modo="daltonismo"] .text-green-500::before,
+[data-a11y-modo="daltonismo"] .text-green-600::before,
+[data-a11y-modo="daltonismo"] .text-green-700::before,
+[data-a11y-modo="daltonismo"] .text-emerald-500::before,
+[data-a11y-modo="daltonismo"] .text-emerald-600::before,
+[data-a11y-modo="daltonismo"] .text-emerald-700::before {
+    content: "\2713\00A0";
+    font-weight: 700;
+}
+
+[data-a11y-modo="daltonismo"] .text-red-500::before,
+[data-a11y-modo="daltonismo"] .text-red-600::before,
+[data-a11y-modo="daltonismo"] .text-red-700::before {
+    content: "\2715\00A0";
+    font-weight: 700;
+}
+
+[data-a11y-modo="daltonismo"] .text-yellow-500::before,
+[data-a11y-modo="daltonismo"] .text-yellow-600::before,
+[data-a11y-modo="daltonismo"] .text-yellow-700::before,
+[data-a11y-modo="daltonismo"] .text-orange-500::before,
+[data-a11y-modo="daltonismo"] .text-orange-600::before,
+[data-a11y-modo="daltonismo"] .text-orange-700::before {
+    content: "\26A0\FE0E\00A0";
+    font-weight: 700;
+}
+
+[data-a11y-modo="daltonismo"] .text-blue-500::before,
+[data-a11y-modo="daltonismo"] .text-blue-600::before,
+[data-a11y-modo="daltonismo"] .text-blue-700::before,
+[data-a11y-modo="daltonismo"] .text-indigo-500::before,
+[data-a11y-modo="daltonismo"] .text-indigo-600::before,
+[data-a11y-modo="daltonismo"] .text-indigo-700::before {
+    content: "\2139\FE0E\00A0";
+    font-weight: 700;
+}

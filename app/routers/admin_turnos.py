@@ -2,16 +2,16 @@ from datetime import date, datetime, time
 
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
+from app.core.templating import get_templates
 from app.database import get_db
 from app.models.atencion import AtencionHistorial
 from app.models.turno import Turno
 from app.services.notifier import notificar_cambio_estado_turno
 
 router = APIRouter(prefix="/page", tags=["Admin Turnos"])
-templates = Jinja2Templates(directory="app/templates")
+templates = get_templates()
 
 ESTADOS = ["PENDIENTE", "CONFIRMADO", "CANCELADO", "CANCELADO_TARDIO", "FINALIZADO"]
 MEDIOS_PAGO = ["efectivo", "transferencia", "debito", "credito", "qr"]

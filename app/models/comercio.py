@@ -30,6 +30,17 @@ class Comercio(Base):
     # --- Red comunitaria (opt-in) ---
     habilitar_red_comunitaria: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
+    # --- Skins / apariencia (Etapa 8.1) ---
+    tema_preset: Mapped[str] = mapped_column(String(50), nullable=False, default="clasico_paws")
+    color_primario: Mapped[str] = mapped_column(String(7), nullable=False, default="#1E40AF")
+    color_secundario: Mapped[str] = mapped_column(String(7), nullable=False, default="#0D9488")
+    logo_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    banner_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+    # --- Accesibilidad (a11y) ---
+    a11y_modo: Mapped[str] = mapped_column(String(50), nullable=False, default="normal")
+    a11y_dyslexic: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
     # --- Relaciones ---
     clientes: Mapped[list["Cliente"]] = relationship("Cliente", back_populates="comercio")  # noqa: F821
     usuarios: Mapped[list["Usuario"]] = relationship("Usuario", back_populates="comercio")  # noqa: F821

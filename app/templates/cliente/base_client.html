@@ -8,7 +8,7 @@
     <!-- PWA -->
     <link rel="manifest" href="/static/manifest.json">
     <link rel="icon" type="image/x-icon" href="/static/icons/favicon.ico">
-    <meta name="theme-color" content="#4F46E5">
+    <meta name="theme-color" content="{{ comercio.color_primario }}">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Servipet">
@@ -17,7 +17,15 @@
 
     <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/static/css/a11y.css">
     <style>
+        :root {
+            --color-primario: {{ comercio.color_primario }};
+            --color-secundario: {{ comercio.color_secundario }};
+            --texto-sobre-primario: {{ skin.texto_sobre_primario }};
+            --texto-sobre-secundario: {{ skin.texto_sobre_secundario }};
+        }
+
         [x-cloak] { display: none !important; }
         html { overscroll-behavior-y: none; }
         body {
@@ -37,7 +45,7 @@
         }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-gray-100 min-h-screen {% if comercio.a11y_dyslexic %}a11y-dyslexic{% endif %}" data-a11y-modo="{{ comercio.a11y_modo }}" data-tema="{{ comercio.tema_preset }}">
 
     <!-- Flash messages -->
     {% if success %}
@@ -63,7 +71,7 @@
     <!-- PWA install prompt (bottom, above nav) -->
     <div id="install-banner" class="hidden fixed inset-x-0 z-40 px-4"
          style="bottom: calc(4.5rem + env(safe-area-inset-bottom));">
-        <div class="bg-white border border-indigo-200 rounded-2xl px-4 py-3 flex items-center justify-between gap-3 shadow-lg">
+        <div class="bg-white border rounded-2xl px-4 py-3 flex items-center justify-between gap-3 shadow-lg" style="border-color: color-mix(in srgb, var(--color-primario) 25%, transparent);">
             <div class="flex items-center gap-3 min-w-0">
                 <img src="/static/icons/icon-192.png" alt="" class="w-10 h-10 rounded-xl shrink-0">
                 <div class="min-w-0">
@@ -72,7 +80,7 @@
                 </div>
             </div>
             <div class="flex items-center gap-1 shrink-0">
-                <button id="install-btn" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-indigo-700 active:bg-indigo-800 transition">Instalar</button>
+                <button id="install-btn" class="bg-[var(--color-primario)] text-[var(--texto-sobre-primario)] px-4 py-2 rounded-xl text-sm font-medium hover:opacity-90 active:opacity-80 transition">Instalar</button>
                 <button id="install-dismiss" aria-label="Descartar aviso" class="text-gray-400 hover:text-gray-600 p-2 rounded-lg transition text-lg leading-none">&times;</button>
             </div>
         </div>
@@ -85,7 +93,7 @@
             <a href="/cliente/dashboard"
                aria-current="{% if request.url.path == '/cliente/dashboard' %}page{% endif %}"
                class="flex flex-col items-center justify-center py-3 min-h-14 text-xs font-medium transition active:opacity-70
-                      {% if request.url.path == '/cliente/dashboard' %}text-indigo-600{% else %}text-gray-400 hover:text-indigo-500{% endif %}">
+                      {% if request.url.path == '/cliente/dashboard' %}text-[var(--color-primario)]{% else %}text-gray-400 hover:text-gray-600{% endif %}">
                 <svg class="w-6 h-6 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h3a1 1 0 001-1v-4h4v4a1 1 0 001 1h3a1 1 0 001-1V10"/>
                 </svg>
@@ -94,7 +102,7 @@
             <a href="/cliente/turnos"
                aria-current="{% if request.url.path in ['/cliente/turnos', '/cliente/reservar'] %}page{% endif %}"
                class="flex flex-col items-center justify-center py-3 min-h-14 text-xs font-medium transition active:opacity-70
-                      {% if request.url.path in ['/cliente/turnos', '/cliente/reservar'] %}text-indigo-600{% else %}text-gray-400 hover:text-indigo-500{% endif %}">
+                      {% if request.url.path in ['/cliente/turnos', '/cliente/reservar'] %}text-[var(--color-primario)]{% else %}text-gray-400 hover:text-gray-600{% endif %}">
                 <svg class="w-6 h-6 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
@@ -103,7 +111,7 @@
             <a href="/cliente/mascotas"
                aria-current="{% if request.url.path == '/cliente/mascotas' %}page{% endif %}"
                class="flex flex-col items-center justify-center py-3 min-h-14 text-xs font-medium transition active:opacity-70
-                      {% if request.url.path == '/cliente/mascotas' %}text-indigo-600{% else %}text-gray-400 hover:text-indigo-500{% endif %}">
+                      {% if request.url.path == '/cliente/mascotas' %}text-[var(--color-primario)]{% else %}text-gray-400 hover:text-gray-600{% endif %}">
                 <svg class="w-6 h-6 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.25c2-1.5 4.5-1.5 6 0 1.5 1.5 1.5 4 0 5.5L12 18l-6-6.25c-1.5-1.5-1.5-4 0-5.5 1.5-1.5 4-1.5 6 0z"/>
                 </svg>
@@ -112,7 +120,7 @@
             <a href="/cliente/comunidad"
                aria-current="{% if request.url.path == '/cliente/comunidad' %}page{% endif %}"
                class="flex flex-col items-center justify-center py-3 min-h-14 text-xs font-medium transition active:opacity-70
-                      {% if request.url.path == '/cliente/comunidad' %}text-indigo-600{% else %}text-gray-400 hover:text-indigo-500{% endif %}">
+                      {% if request.url.path == '/cliente/comunidad' %}text-[var(--color-primario)]{% else %}text-gray-400 hover:text-gray-600{% endif %}">
                 <svg class="w-6 h-6 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.36-1.86M17 20H7m10 0v-2c0-.66-.13-1.3-.36-1.86M7 20H2v-2a3 3 0 015.36-1.86M7 20v-2c0-.66.13-1.3.36-1.86m0 0a5 5 0 019.28 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
                 </svg>

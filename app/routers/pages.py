@@ -5,9 +5,9 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
+from app.core.templating import get_templates
 from app.database import get_db
 from app.models.atencion import AtencionHistorial
 from app.models.caja import Caja
@@ -23,7 +23,7 @@ from app.services.dashboard import metricas, resumen_dia
 from app.services.ventas import crear_venta as crear_venta_svc
 
 router = APIRouter(prefix="/page", tags=["Pages"])
-templates = Jinja2Templates(directory="app/templates")
+templates = get_templates()
 
 
 @router.get("/", response_class=HTMLResponse)

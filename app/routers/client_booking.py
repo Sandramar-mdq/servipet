@@ -2,9 +2,9 @@ from datetime import date, datetime, timedelta
 
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
+from app.core.templating import get_templates
 from app.database import get_db
 from app.dependencies import get_current_client
 from app.models.atencion import AtencionHistorial
@@ -17,7 +17,7 @@ from app.services.turnos import calcular_slots_disponibles, parse_hora
 
 API_ROUTER = APIRouter(prefix="/api/client", tags=["Cliente Booking API"])
 BOOKING_ROUTER = APIRouter(prefix="/cliente", tags=["Cliente Booking"])
-templates = Jinja2Templates(directory="app/templates")
+templates = get_templates()
 
 
 @API_ROUTER.get("/slots-disponibles")
