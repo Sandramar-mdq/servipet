@@ -14,11 +14,12 @@ from datetime import date, datetime, time, timedelta
 from app.database import SessionLocal, Base, engine
 from app.models import AtencionHistorial, Cliente, Comercio, Mascota, Servicio, Turno
 
+COMERCIO_ID = 1
 COMERCIO = {
-    "nombre": "Servipet Centro",
+    "nombre": "Servipet Demo",
     "direccion": "Av. Principal 123",
     "telefono": "1140000000",
-    "email": "centro@servipet.com",
+    "email": "demo@servipet.com",
     "hora_apertura": "09:00",
     "hora_cierre": "18:00",
     "slot_minutos": 30,
@@ -172,7 +173,9 @@ def reset_semilla(db):
     if cliente_ids:
         db.query(Cliente).filter(Cliente.id.in_(cliente_ids)).delete(synchronize_session=False)
     db.query(Servicio).filter(Servicio.nombre.in_([s["nombre"] for s in SERVICIOS])).delete(synchronize_session=False)
-    db.query(Comercio).filter(Comercio.nombre == COMERCIO["nombre"]).delete(synchronize_session=False)
+    db.query(Comercio).filter(Comercio.id == COMERCIO_ID, Comercio.nombre == COMERCIO["nombre"]).delete(
+        synchronize_session=False
+    )
     db.commit()
     print(f"[RESET] Se eliminaron datos semilla previos "
           f"({len(cliente_ids)} clientes, {len(mascota_ids)} mascotas)")
@@ -189,10 +192,12 @@ def poblar(db, reset: bool = False) -> None:
     def contador(entidad):
         return creados.setdefault(entidad, 0), saltados.setdefault(entidad, 0)
 
-    # Comercio
-    comercio = db.query(Comercio).filter(Comercio.nombre == COMERCIO["nombre"]).first()
+    # Comercio (por defecto: id=1, 'Servipet Demo'; no se recrea si ya existe)
+    comercio = db.get(Comercio, COMERCIO_ID)
     if not comercio:
-        comercio = Comercio(**COMERCIO)
+        comercio = db.query(Comercio).filter(Comercio.nombre == COMERCIO["nombre"]).first()
+    if not comercio:
+        comercio = Comercio(id=COMERCIO_ID, **COMERCIO)
         db.add(comercio)
         db.flush()
         creados["Comercio"] = 1
