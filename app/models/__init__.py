@@ -12,6 +12,7 @@ from app.models.venta_detalle import VentaDetalle
 from app.models.caja import Caja
 from app.models.caja_movimiento import CajaMovimiento
 from app.models.aviso_comunitario import AvisoComunitario
+from app.models.chat import ChatMensaje, ChatSesion
 
 __all__ = [
     "Comercio",
@@ -28,4 +29,6 @@ __all__ = [
     "Caja",
     "CajaMovimiento",
     "AvisoComunitario",
+    "ChatSesion",
+    "ChatMensaje",
 ]

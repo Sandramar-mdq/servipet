@@ -12,3 +12,4 @@ cloudinary
 alembic
 pytest
 httpx
+google-genai

@@ -1,0 +1,213 @@
+{# Widget flotante de chat IA (Etapa 9.2).
+
+    Reutilizable en los portales: requiere que el template base cargue
+    Tailwind y defina las variables --color-primario / --texto-sobre-primario.
+    La posicion vertical del launcher se ajusta con --chat-offset-bottom
+    (default 1rem; el portal cliente la pisa para no tapar su bottom-nav).
+#}
+
+<style>
+    #servipet-chat-launcher {
+        position: fixed;
+        right: max(1rem, env(safe-area-inset-right));
+        bottom: var(--chat-offset-bottom, calc(1rem + env(safe-area-inset-bottom)));
+        z-index: 60;
+        width: 3.5rem;
+        height: 3.5rem;
+        border-radius: 9999px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+        transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+
+    #servipet-chat-launcher:active { transform: scale(0.92); }
+
+    #servipet-chat-panel {
+        position: fixed;
+        right: max(0.75rem, env(safe-area-inset-right));
+        bottom: calc(var(--chat-offset-bottom, calc(1rem + env(safe-area-inset-bottom))) + 4.5rem);
+        z-index: 60;
+        width: min(380px, calc(100vw - 1.5rem));
+        height: min(480px, 70dvh);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border-radius: 1.25rem;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
+        animation: chat-panel-in 0.2s ease-out;
+    }
+
+    @keyframes chat-panel-in {
+        from { opacity: 0; transform: translateY(12px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    #servipet-chat-panel.hidden { display: none; }
+
+    #servipet-chat-mensajes {
+        flex: 1 1 auto;
+        overflow-y: auto;
+        padding: 0.75rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .chat-fila { display: flex; }
+    .chat-fila-user { justify-content: flex-end; }
+    .chat-fila-bot { justify-content: flex-start; }
+
+    .chat-burbuja {
+        max-width: 82%;
+        padding: 0.55rem 0.8rem;
+        border-radius: 1.1rem;
+        font-size: 0.875rem;
+        line-height: 1.45;
+        word-break: break-word;
+    }
+
+    .chat-burbuja-user {
+        background: var(--color-primario);
+        color: var(--texto-sobre-primario);
+        border-bottom-right-radius: 0.35rem;
+    }
+
+    .chat-burbuja-bot,
+    .chat-burbuja-fallback {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        color: #1f2937;
+        border-bottom-left-radius: 0.35rem;
+    }
+
+    .chat-burbuja-error {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        color: #991b1b;
+        border-bottom-left-radius: 0.35rem;
+    }
+
+    .chat-reintentar {
+        margin-top: 0.35rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-decoration: underline;
+        min-height: 44px;
+    }
+
+    #servipet-chat-typing {
+        display: flex;
+        gap: 0.25rem;
+        align-self: flex-start;
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 1.1rem;
+        border-bottom-left-radius: 0.35rem;
+        padding: 0.65rem 0.8rem;
+        margin: 0 0.75rem 0.5rem;
+        width: fit-content;
+    }
+
+    #servipet-chat-typing span {
+        width: 0.4rem;
+        height: 0.4rem;
+        border-radius: 9999px;
+        background: #9ca3af;
+        animation: chat-dot 1.2s infinite ease-in-out;
+    }
+
+    #servipet-chat-typing span:nth-child(2) { animation-delay: 0.15s; }
+    #servipet-chat-typing span:nth-child(3) { animation-delay: 0.3s; }
+
+    @keyframes chat-dot {
+        0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+        30% { transform: translateY(-4px); opacity: 1; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        #servipet-chat-panel { animation: none; }
+        #servipet-chat-typing span { animation: none; opacity: 0.7; }
+        #servipet-chat-launcher { transition: none; }
+    }
+
+    /* Alto contraste: bordes visibles y texto legible (coherente con a11y.css) */
+    [data-a11y-modo="alto_contraste"] #servipet-chat-panel,
+    [data-a11y-modo="alto_contraste"] .chat-burbuja-bot,
+    [data-a11y-modo="alto_contraste"] .chat-burbuja-fallback,
+    [data-a11y-modo="alto_contraste"] #servipet-chat-typing {
+        background-color: #000000 !important;
+        border-color: #ffffff !important;
+    }
+
+    [data-a11y-modo="alto_contraste"] .chat-burbuja-bot,
+    [data-a11y-modo="alto_contraste"] .chat-burbuja-fallback,
+    [data-a11y-modo="alto_contraste"] #servipet-chat-typing span,
+    [data-a11y-modo="alto_contraste"] #servipet-chat-input {
+        color: #ffffff !important;
+    }
+</style>
+
+<button
+    id="servipet-chat-launcher"
+    type="button"
+    aria-expanded="false"
+    aria-controls="servipet-chat-panel"
+    aria-label="Abrir chat con el asistente virtual"
+    class="bg-[var(--color-primario)] text-[var(--texto-sobre-primario)]"
+>
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h8m-8 4h5m4 5-3-3H7a4 4 0 01-4-4V7a4 4 0 014-4h10a4 4 0 014 4v9a4 4 0 01-4 4h-1z"/>
+    </svg>
+</button>
+
+<section
+    id="servipet-chat-panel"
+    class="hidden bg-white"
+    role="dialog"
+    aria-modal="false"
+    aria-label="Chat con el asistente virtual de {{ comercio.nombre }}"
+    data-comercio-nombre="{{ comercio.nombre }}"
+>
+    <header class="flex items-center justify-between gap-2 px-4 py-3 bg-[var(--color-primario)] text-[var(--texto-sobre-primario)]">
+        <div class="min-w-0">
+            <p class="text-sm font-semibold leading-tight">Asistente Servipet</p>
+            <p class="text-xs opacity-80 truncate">{{ comercio.nombre }}</p>
+        </div>
+        <button id="servipet-chat-cerrar" type="button" aria-label="Cerrar chat" class="p-2 rounded-lg hover:bg-white/10 active:opacity-70 transition text-xl leading-none">
+            &times;
+        </button>
+    </header>
+
+    <div id="servipet-chat-mensajes" role="log" aria-live="polite" aria-relevant="additions"></div>
+
+    <div id="servipet-chat-typing" class="hidden" aria-label="El asistente esta escribiendo">
+        <span></span><span></span><span></span>
+    </div>
+
+    <form id="servipet-chat-form" class="flex items-center gap-2 border-t border-gray-200 px-3 py-2" style="padding-bottom: max(0.5rem, env(safe-area-inset-bottom));">
+        <input
+            id="servipet-chat-input"
+            type="text"
+            autocomplete="off"
+            maxlength="2000"
+            placeholder="Escribi tu mensaje..."
+            aria-label="Escribi tu mensaje para el asistente"
+            class="flex-1 min-w-0 rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primario)]"
+        />
+        <button
+            id="servipet-chat-enviar"
+            type="submit"
+            aria-label="Enviar mensaje"
+            class="shrink-0 w-11 h-11 flex items-center justify-center rounded-xl bg-[var(--color-primario)] text-[var(--texto-sobre-primario)] hover:opacity-90 active:opacity-80 transition disabled:opacity-50"
+        >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.27 3.13a.5.5 0 01.68-.58l16.36 8.53a1 1 0 010 1.84L3.95 21.45a.5.5 0 01-.68-.58L6 12zm0 0h7"/>
+            </svg>
+        </button>
+    </form>
+</section>
+
+<script src="/static/js/chat_widget.js" defer></script>

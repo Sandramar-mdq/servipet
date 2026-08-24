@@ -24,6 +24,8 @@
             --color-secundario: {{ comercio.color_secundario }};
             --texto-sobre-primario: {{ skin.texto_sobre_primario }};
             --texto-sobre-secundario: {{ skin.texto_sobre_secundario }};
+            /* Widget de chat: lo sube para no tapar la barra de navegacion inferior */
+            --chat-offset-bottom: calc(4.75rem + env(safe-area-inset-bottom));
         }
 
         [x-cloak] { display: none !important; }
@@ -178,6 +180,9 @@
             hideInstallBanner();
         });
     </script>
+
+    <!-- Widget de chat IA (Etapa 9.2) -->
+    {% include "components/chat_widget.html" %}
 
     {% block scripts %}{% endblock %}
 </body>

@@ -4,6 +4,7 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from app.models.atencion import AtencionHistorial
+from app.models.cliente import Cliente
 from app.models.comercio import Comercio
 from app.models.mascota import Mascota
 from app.models.servicio import Servicio
@@ -31,7 +32,19 @@ def _es_rango_libre(start: datetime, end: datetime, ocupados: list[tuple[datetim
     return True
 
 
-def calcular_slots_disponibles(db: Session, comercio: Comercio | None, fecha: date, servicio: Servicio) -> list[str]:
+def calcular_slots_disponibles(
+    db: Session,
+    comercio: Comercio | None,
+    fecha: date,
+    servicio: Servicio,
+    comercio_id: int | None = None,
+) -> list[str]:
+    """Calcula slots libres para `fecha`/`servicio`.
+
+    Si se pasa `comercio_id`, solo se consideran como bloqueantes los
+    turnos/atenciones de ese tenant (aislamiento multitenant; sin el
+    parametro se conserva el comportamiento historico global).
+    """
     apertura = parse_hora(comercio.hora_apertura if comercio and comercio.hora_apertura else APERTURA_DEFECTO)
     cierre = parse_hora(comercio.hora_cierre if comercio and comercio.hora_cierre else CIERRE_DEFECTO)
     paso = (comercio.slot_minutos if comercio and comercio.slot_minutos else SLOT_MINUTOS_DEFECTO) or 30
@@ -41,24 +54,30 @@ def calcular_slots_disponibles(db: Session, comercio: Comercio | None, fecha: da
     fin_dia = datetime.combine(fecha, time.max)
 
     ocupados: list[tuple[datetime, datetime]] = []
-    turnos = (
-        db.query(Turno)
-        .filter(
-            Turno.fecha_hora >= inicio_dia,
-            Turno.fecha_hora <= fin_dia,
-            Turno.estado.notin_(["CANCELADO", "CANCELADO_TARDIO"]),
-        )
-        .all()
+    turnos_query = db.query(Turno).filter(
+        Turno.fecha_hora >= inicio_dia,
+        Turno.fecha_hora <= fin_dia,
+        Turno.estado.notin_(["CANCELADO", "CANCELADO_TARDIO"]),
     )
-    for t in turnos:
+    if comercio_id is not None:
+        turnos_query = (
+            turnos_query.join(Cliente, Turno.cliente_id == Cliente.id)
+            .filter(Cliente.comercio_id == comercio_id)
+        )
+    for t in turnos_query.all():
         dur = t.duracion_minutos or 30
         ocupados.append((t.fecha_hora, t.fecha_hora + timedelta(minutes=dur)))
 
-    atenciones = (
-        db.query(AtencionHistorial)
-        .filter(AtencionHistorial.fecha >= inicio_dia, AtencionHistorial.fecha <= fin_dia)
-        .all()
+    atenciones_query = db.query(AtencionHistorial).filter(
+        AtencionHistorial.fecha >= inicio_dia, AtencionHistorial.fecha <= fin_dia
     )
+    if comercio_id is not None:
+        atenciones_query = (
+            atenciones_query.join(Mascota, AtencionHistorial.mascota_id == Mascota.id)
+            .join(Cliente, Mascota.cliente_id == Cliente.id)
+            .filter(Cliente.comercio_id == comercio_id)
+        )
+    atenciones = atenciones_query.all()
     for a in atenciones:
         dur = a.servicio.duracion_minutos if a.servicio else 30
         ocupados.append((a.fecha, a.fecha + timedelta(minutes=dur)))
