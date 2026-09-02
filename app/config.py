@@ -10,6 +10,9 @@ class Settings(BaseSettings):
     TWILIO_ACCOUNT_SID: str | None = None
     TWILIO_AUTH_TOKEN: str | None = None
     TWILIO_FROM: str | None = None
+    NOTIFICATION_WEBHOOK_URL: str | None = None
+    NOTIFICATION_WEBHOOK_TIMEOUT_S: int = 10
+    NOTIFICATION_MAX_INTENTOS: int = 3
     TURSO_AUTH_TOKEN: str | None = None
 
     # Cloudinary (red comunitaria - fotos de avisos)

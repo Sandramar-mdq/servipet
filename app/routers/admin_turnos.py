@@ -1,6 +1,6 @@
 from datetime import date, datetime, time
 
-from fastapi import APIRouter, Depends, Form, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 
@@ -8,12 +8,13 @@ from app.core.templating import get_templates
 from app.database import get_db
 from app.models.atencion import AtencionHistorial
 from app.models.turno import Turno
-from app.services.notifier import notificar_cambio_estado_turno
+from app.services import notification_service
 
 router = APIRouter(prefix="/page", tags=["Admin Turnos"])
 templates = get_templates()
 
 ESTADOS = ["PENDIENTE", "CONFIRMADO", "CANCELADO", "CANCELADO_TARDIO", "FINALIZADO"]
+FASES = ["ESPERA", "BAÑO", "CORTE", "LISTO"]
 MEDIOS_PAGO = ["efectivo", "transferencia", "debito", "credito", "qr"]
 
 
@@ -63,6 +64,7 @@ def agenda_turnos(
 @router.post("/turnos/{turno_id}/cambiar-estado")
 def cambiar_estado_turno(
     turno_id: int,
+    background_tasks: BackgroundTasks,
     estado: str = Form(...),
     fecha: str | None = Form(None),
     estado_filtro: str | None = Form(None),
@@ -78,7 +80,7 @@ def cambiar_estado_turno(
 
     turno.estado = estado
     db.commit()
-    notificar_cambio_estado_turno(turno, estado)
+    background_tasks.add_task(notification_service.enqueue_cambio_estado, turno.id, estado)
     qs = _query_params(fecha, estado_filtro)
     return RedirectResponse(f"/page/turnos?{qs}success=Estado actualizado a {estado}", status_code=303)
 
@@ -123,6 +125,31 @@ def completar_turno(
 
     qs = _query_params(fecha, estado_filtro)
     return RedirectResponse(f"/page/turnos?{qs}success=Atencion registrada y turno finalizado", status_code=303)
+
+
+@router.post("/turnos/{turno_id}/fase")
+def cambiar_fase_turno(
+    turno_id: int,
+    background_tasks: BackgroundTasks,
+    fase: str = Form(...),
+    fecha: str | None = Form(None),
+    estado_filtro: str | None = Form(None),
+    db: Session = Depends(get_db),
+):
+    turno = db.query(Turno).filter(Turno.id == turno_id).first()
+    if not turno:
+        return RedirectResponse("/page/turnos?error=Turno inexistente", status_code=303)
+    fase_norm = (fase or "").upper()
+    if fase_norm not in FASES:
+        return RedirectResponse("/page/turnos?error=Fase invalida", status_code=303)
+
+    turno.fase = fase_norm
+    db.commit()
+    if fase_norm == "LISTO":
+        background_tasks.add_task(notification_service.enqueue_pet_ready, turno.id)
+
+    qs = _query_params(fecha, estado_filtro)
+    return RedirectResponse(f"/page/turnos?{qs}success=Fase actualizada a {fase_norm}", status_code=303)
 
 
 def _query_params(fecha: str | None, estado_filtro: str | None) -> str:

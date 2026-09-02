@@ -1,18 +1,17 @@
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 
-from fastapi import APIRouter, Depends, Form, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 
 from app.core.templating import get_templates
 from app.database import get_db
 from app.dependencies import get_current_client
-from app.models.atencion import AtencionHistorial
 from app.models.cliente import Cliente
 from app.models.mascota import Mascota
 from app.models.servicio import Servicio
 from app.models.turno import Turno
-from app.services.notifier import notificar_reserva_creada
+from app.services import notification_service
 from app.services.turnos import calcular_slots_disponibles, parse_hora
 
 API_ROUTER = APIRouter(prefix="/api/client", tags=["Cliente Booking API"])
@@ -73,6 +72,7 @@ def reservar_form(
 @BOOKING_ROUTER.post("/reservar")
 def reservar_submit(
     request: Request,
+    background_tasks: BackgroundTasks,
     mascota_id: int = Form(...),
     servicio_id: int = Form(...),
     fecha: str = Form(...),
@@ -122,7 +122,7 @@ def reservar_submit(
     db.add(turno)
     db.commit()
     db.refresh(turno)
-    notificar_reserva_creada(turno)
+    background_tasks.add_task(notification_service.enqueue_reserva, turno.id)
     return RedirectResponse(f"/cliente/turnos/{turno.id}", status_code=303)
 
 

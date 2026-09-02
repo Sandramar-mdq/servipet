@@ -5,7 +5,7 @@ from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.dependencies.auth import get_current_user, require_roles
+from app.dependencies.auth import require_roles
 from app.models.producto import Producto
 from app.models.usuario import Usuario
 from app.schemas.producto import (

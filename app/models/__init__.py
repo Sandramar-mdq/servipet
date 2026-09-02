@@ -5,6 +5,7 @@ from app.models.cliente_otp import ClienteOTP
 from app.models.mascota import Mascota
 from app.models.servicio import Servicio
 from app.models.atencion import AtencionHistorial
+from app.models.notification import NotificationLog
 from app.models.turno import Turno
 from app.models.producto import Producto
 from app.models.venta import Venta
@@ -23,6 +24,7 @@ __all__ = [
     "Servicio",
     "AtencionHistorial",
     "Turno",
+    "NotificationLog",
     "Producto",
     "Venta",
     "VentaDetalle",

@@ -13,3 +13,5 @@ alembic
 pytest
 httpx
 google-genai
+fpdf2
+openpyxl

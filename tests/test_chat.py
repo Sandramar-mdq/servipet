@@ -341,7 +341,7 @@ def _respuestas_de_herramientas(ronda):
 
 
 def test_camino_feliz_con_gemini_mockeado(client, admin_headers, monkeypatch, db):
-    datos = _seed_escenario(db)
+    _seed_escenario(db)
     fake = _FakeIA([_FakeRespuesta(texto="Hola! Si tenemos turnos disponibles.")])
     monkeypatch.setattr(ai_chat_service, "_cliente_ia", lambda: fake)
 
@@ -366,7 +366,7 @@ def test_camino_feliz_con_gemini_mockeado(client, admin_headers, monkeypatch, db
 
 
 def test_loop_function_calling_ejecuta_tools(client, admin_headers, monkeypatch, db):
-    datos = _seed_escenario(db)
+    _seed_escenario(db)
     fake = _FakeIA(
         [
             _FakeRespuesta(

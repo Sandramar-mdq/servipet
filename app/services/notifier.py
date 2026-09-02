@@ -104,13 +104,28 @@ def _mensaje_cancelado(turno) -> str:
 
 
 def notificar_reserva_creada(turno) -> None:
-    telefono = turno.cliente.telefono or ""
-    _enviar(telefono, _mensaje_reserva(turno))
+    """Delega en notification_service conservando la API historica."""
+    telefono = turno.cliente.telefono or "" if turno.cliente else ""
+    if not telefono:
+        logger.warning("[Notificacion] Sin telefono de destino, no se envia mensaje")
+        return
+    if turno.id is None:
+        logger.warning("[Notificacion] Turno sin id, no se envia mensaje")
+        return
+    from app.services.notification_service import enqueue_reserva
+
+    enqueue_reserva(turno.id)
 
 
 def notificar_cambio_estado_turno(turno, nuevo_estado: str) -> None:
-    telefono = turno.cliente.telefono or ""
-    if nuevo_estado == "Confirmado":
-        _enviar(telefono, _mensaje_confirmado(turno))
-    elif nuevo_estado == "Cancelado":
-        _enviar(telefono, _mensaje_cancelado(turno))
+    """Delega en notification_service conservando la API historica."""
+    telefono = turno.cliente.telefono or "" if turno.cliente else ""
+    if not telefono:
+        logger.warning("[Notificacion] Sin telefono de destino, no se envia mensaje")
+        return
+    if turno.id is None:
+        logger.warning("[Notificacion] Turno sin id, no se envia mensaje")
+        return
+    from app.services.notification_service import enqueue_cambio_estado
+
+    enqueue_cambio_estado(turno.id, nuevo_estado)

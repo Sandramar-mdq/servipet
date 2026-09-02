@@ -17,7 +17,6 @@ from app.models.mascota import Mascota
 from app.models.producto import Producto
 from app.models.servicio import Servicio
 from app.models.turno import Turno
-from app.models.venta import Venta
 from app.services.caja import abrir_caja, cerrar_caja, registrar_movimiento
 from app.services.dashboard import metricas, resumen_dia
 from app.services.ventas import crear_venta as crear_venta_svc

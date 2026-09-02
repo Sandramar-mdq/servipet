@@ -1,6 +1,6 @@
 from datetime import date, datetime, time
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -22,7 +22,7 @@ from app.schemas.portal import (
     PortalServicioResponse,
     PortalTurnoResponse,
 )
-from app.services.notifier import notificar_reserva_creada
+from app.services import notification_service
 from app.services.turnos import cancelar_turno, calcular_slots_disponibles, crear_turno
 
 router = APIRouter(prefix="/portal", tags=["Portal Cliente"])
@@ -182,6 +182,7 @@ def disponibilidad(
 @router.post("/reservar", response_model=PortalTurnoResponse, status_code=201)
 def reservar_turno(
     data: PortalReservarRequest,
+    background_tasks: BackgroundTasks,
     usuario: Usuario = Depends(_require_cliente),
     db: Session = Depends(get_db),
 ):
@@ -208,7 +209,7 @@ def reservar_turno(
     )
 
     db.refresh(turno)
-    notificar_reserva_creada(turno)
+    background_tasks.add_task(notification_service.enqueue_reserva, turno.id)
     return _turno_response(turno)
 
 
@@ -234,9 +235,13 @@ def listar_turnos(
 @router.post("/turnos/{turno_id}/cancelar", response_model=PortalCancelarResponse)
 def cancelar(
     turno_id: int,
+    background_tasks: BackgroundTasks,
     usuario: Usuario = Depends(_require_cliente),
     db: Session = Depends(get_db),
 ):
     cliente = usuario.cliente_profile
     resultado = cancelar_turno(db, turno_id=turno_id, cliente_id=cliente.id)
+    background_tasks.add_task(
+        notification_service.enqueue_cambio_estado, turno_id, resultado["estado"]
+    )
     return PortalCancelarResponse(**resultado)
