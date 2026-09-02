@@ -1,0 +1,59 @@
+# Etapa 10.3 - Pipeline CI/CD
+# Ejecuta la suite completa de tests (280+) antes de permitir merges a main.
+# La proteccion de rama en GitHub debe exigir el check `test`.
+
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    # Variables seguras del runner (los tests fijan las suyas en conftest.py)
+    env:
+      DATABASE_URL: sqlite:///./servipet.db
+      SECRET_KEY: ci-secret-key-solo-para-tests
+      NOTIFICATION_PROVIDER: log
+      DEBUG: "false"
+
+    steps:
+      - name: Checkout del codigo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Verificar sintaxis y calidad basica
+        run: |
+          python -m pip install ruff
+          ruff check --select E9,F app tests
+          python -m compileall -q app tests
+
+      - name: Ejecutar suite de tests
+        run: python -m pytest tests -q
