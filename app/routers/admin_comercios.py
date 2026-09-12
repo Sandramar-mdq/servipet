@@ -7,6 +7,7 @@ regresar sin perder la sesion SuperAdmin.
 """
 
 import secrets
+from datetime import datetime
 from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
@@ -117,10 +118,19 @@ def crear_comercio(
     nombre: str = Form(...),
     email: str = Form(...),
     plan: str = Form("DEMO"),
+    acepta_terminos_beta: str = Form(None),
     db: Session = Depends(get_db),
     user: Usuario = Depends(require_superadmin),  # noqa: ARG001
 ):
     """Alta manual de un comercio + su usuario ADMIN (password temporal)."""
+    if (acepta_terminos_beta or "").lower() not in ("on", "true", "1"):
+        return RedirectResponse(
+            "/admin/comercios?error=" + quote(
+                "Debes aceptar los Terminos del Servicio y Exencion de Responsabilidad Beta"
+            ),
+            status_code=303,
+        )
+
     nombre = (nombre or "").strip()
     email = (email or "").strip().lower()
     plan = (plan or "").strip().upper()
@@ -143,6 +153,8 @@ def crear_comercio(
         plan=plan,
         estado="ACTIVO",
         activo=True,
+        acepta_terminos_beta=True,
+        terminos_aceptados_at=datetime.utcnow(),
     )
     db.add(comercio)
     db.flush()

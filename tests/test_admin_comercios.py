@@ -124,6 +124,8 @@ class TestListado:
         assert "Nuevo Comercio" in resp.text
         assert "modal-comercio" in resp.text
         assert "input-nombre" in resp.text
+        assert "input-acepta-terminos" in resp.text
+        assert "/legal/terminos-beta" in resp.text
 
     def test_lista_vacia(self, client, superadmin_headers):
         resp = client.get(PANEL, headers=superadmin_headers)
@@ -163,6 +165,7 @@ class TestCrearComercio:
                 "nombre": "Vet Central",
                 "email": "admin@vetcentral.com",
                 "plan": "PRO",
+                "acepta_terminos_beta": "on",
             },
             headers=superadmin_headers,
             follow_redirects=False,
@@ -178,6 +181,8 @@ class TestCrearComercio:
             assert comercio.plan == "PRO"
             assert comercio.estado == "ACTIVO"
             assert comercio.fecha_registro is not None
+            assert comercio.acepta_terminos_beta is True
+            assert comercio.terminos_aceptados_at is not None
             admin = db.query(Usuario).filter(
                 Usuario.email == "admin@vetcentral.com",
                 Usuario.rol == "ADMIN",
@@ -187,10 +192,43 @@ class TestCrearComercio:
         finally:
             db.close()
 
+    def test_sin_aceptar_terminos_rechaza(self, client, superadmin_headers):
+        resp = client.post(
+            PANEL,
+            data={
+                "nombre": "Sin Consentimiento",
+                "email": "sin-consentimiento@comercio.com",
+                "plan": "DEMO",
+            },
+            headers=superadmin_headers,
+            follow_redirects=False,
+        )
+        assert resp.status_code == 303
+        assert "error=" in resp.headers["location"]
+        assert "Terminos" in resp.headers["location"]
+
+        db = TestingSessionLocal()
+        try:
+            comercio = db.query(Comercio).filter(
+                Comercio.email == "sin-consentimiento@comercio.com"
+            ).first()
+            assert comercio is None
+            admin = db.query(Usuario).filter(
+                Usuario.email == "sin-consentimiento@comercio.com"
+            ).first()
+            assert admin is None
+        finally:
+            db.close()
+
     def test_nombre_vacio_redirige_error(self, client, superadmin_headers):
         resp = client.post(
             PANEL,
-            data={"nombre": " ", "email": "a@b.com", "plan": "DEMO"},
+            data={
+                "nombre": " ",
+                "email": "a@b.com",
+                "plan": "DEMO",
+                "acepta_terminos_beta": "on",
+            },
             headers=superadmin_headers,
             follow_redirects=False,
         )
@@ -212,7 +250,12 @@ class TestCrearComercio:
             db.close()
         resp = client.post(
             PANEL,
-            data={"nombre": "Duplicado", "email": "dup@comercio.com", "plan": "DEMO"},
+            data={
+                "nombre": "Duplicado",
+                "email": "dup@comercio.com",
+                "plan": "DEMO",
+                "acepta_terminos_beta": "on",
+            },
             headers=superadmin_headers,
             follow_redirects=False,
         )
@@ -222,7 +265,12 @@ class TestCrearComercio:
     def test_plan_invalido_redirige_error(self, client, superadmin_headers):
         resp = client.post(
             PANEL,
-            data={"nombre": "X", "email": "x@x.com", "plan": "PREMIUM"},
+            data={
+                "nombre": "X",
+                "email": "x@x.com",
+                "plan": "PREMIUM",
+                "acepta_terminos_beta": "on",
+            },
             headers=superadmin_headers,
             follow_redirects=False,
         )

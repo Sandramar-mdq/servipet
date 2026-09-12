@@ -54,6 +54,10 @@ class Comercio(Base):
     a11y_modo: Mapped[str] = mapped_column(String(50), nullable=False, default="normal")
     a11y_dyslexic: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
+    # --- Consentimiento Terminos Beta (Tarea 11.2.2) ---
+    acepta_terminos_beta: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    terminos_aceptados_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
     # --- Relaciones ---
     clientes: Mapped[list["Cliente"]] = relationship("Cliente", back_populates="comercio")  # noqa: F821
     usuarios: Mapped[list["Usuario"]] = relationship("Usuario", back_populates="comercio")  # noqa: F821
