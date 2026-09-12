@@ -1,4 +1,6 @@
-from sqlalchemy import Boolean, Float, Integer, String, Text
+from datetime import datetime
+
+from sqlalchemy import Boolean, DateTime, Float, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -21,6 +23,17 @@ class Comercio(Base):
     hora_cierre: Mapped[str] = mapped_column(String(5), nullable=False, default="18:00")
     slot_minutos: Mapped[int] = mapped_column(Integer, nullable=False, default=30)
     activo: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+
+    # --- Administracion / tenancy (modulo SuperAdmin) ---
+    plan: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="DEMO", server_default="DEMO"
+    )
+    estado: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="ACTIVO", server_default="ACTIVO"
+    )
+    fecha_registro: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, server_default=func.now()
+    )
 
     # --- Políticas de cancelación y negocio ---
     horas_limite_cancelacion: Mapped[int] = mapped_column(Integer, nullable=False, default=24)

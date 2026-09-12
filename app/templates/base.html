@@ -65,8 +65,13 @@
                 <a href="/page/caja" class="hover:opacity-80 transition">Caja</a>
                 <a href="/page/dashboard" class="hover:opacity-80 transition">Dashboard</a>
                 <a href="/page/reportes" class="hover:opacity-80 transition">Reportes</a>
+                {% if es_superadmin %}
+                <a href="/admin/comercios" class="hover:opacity-80 transition">Comercios</a>
+                {% endif %}
+                {% if usuario and usuario.rol == 'ADMIN' %}
                 <a href="/admin/personalizacion" class="hover:opacity-80 transition">Branding</a>
                 <a href="/admin/comunidad" class="hover:opacity-80 transition">Comunidad</a>
+                {% endif %}
             </div>
 
             <!-- Mobile hamburger -->
@@ -86,8 +91,13 @@
             <a href="/page/caja" class="block py-2.5 hover:opacity-80 transition active:opacity-70">Caja Diaria</a>
             <a href="/page/dashboard" class="block py-2.5 hover:opacity-80 transition active:opacity-70">Dashboard</a>
             <a href="/page/reportes" class="block py-2.5 hover:opacity-80 transition active:opacity-70">Reportes</a>
+            {% if es_superadmin %}
+            <a href="/admin/comercios" class="block py-2.5 hover:opacity-80 transition active:opacity-70">Comercios</a>
+            {% endif %}
+            {% if usuario and usuario.rol == 'ADMIN' %}
             <a href="/admin/personalizacion" class="block py-2.5 hover:opacity-80 transition active:opacity-70">Branding / Accesibilidad</a>
             <a href="/admin/comunidad" class="block py-2.5 hover:opacity-80 transition active:opacity-70">Comunidad / Red Social</a>
+            {% endif %}
         </div>
     </nav>
 
@@ -124,6 +134,27 @@
             </div>
         </div>
     </div>
+
+    <!-- Impersonacion SuperAdmin (vista rapida como otro comercio) -->
+    {% if es_impersonacion %}
+    <div class="fixed inset-x-0 z-40 px-4"
+         style="bottom: calc(0.75rem + env(safe-area-inset-bottom));">
+        <div class="max-w-2xl mx-auto bg-[var(--color-primario)] text-[var(--texto-sobre-primario)] border border-black/10 rounded-2xl px-4 py-3 flex items-center justify-between gap-3 shadow-lg">
+            <div class="flex items-center gap-3 min-w-0">
+                <span class="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide"
+                      style="background-color: var(--color-secundario); color: var(--texto-sobre-secundario);">Vista rapida</span>
+                <p class="text-sm font-medium leading-tight truncate">Estas viendo: {{ impersonacion_nombre or 'Comercio impersonado' }}</p>
+            </div>
+            <form method="post" action="/admin/salir-impersonacion" class="shrink-0">
+                <button type="submit"
+                        class="px-3 py-1.5 rounded-lg text-xs font-semibold hover:opacity-85 active:opacity-75 transition"
+                        style="background-color: var(--color-secundario); color: var(--texto-sobre-secundario);">
+                    Salir
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
 
     <!-- Content -->
     <main class="max-w-7xl mx-auto px-4 py-6">

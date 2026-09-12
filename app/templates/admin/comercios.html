@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}Gestion de Comercios - Servipet{% endblock %}
+
+{% block content %}
+
+<div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+    <div>
+        <h1 class="text-2xl font-bold text-gray-800">Gestion de Comercios / Tenants</h1>
+        <p class="text-sm text-gray-500">SuperAdmin: todos los comercios registrados en la plataforma</p>
+    </div>
+    <button type="button" id="btn-nuevo-comercio"
+            class="px-5 py-2.5 rounded-xl text-sm font-semibold shadow-md hover:opacity-90 active:opacity-80 transition"
+            style="background-color: var(--color-primario); color: var(--texto-sobre-primario);">
+        + Nuevo Comercio
+    </button>
+</div>
+
+<!-- Tabla de comercios -->
+<div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-x-auto">
+    <table class="w-full text-sm text-left min-w-[760px]">
+        <thead class="bg-gray-50 border-b border-gray-200 text-gray-500 uppercase text-xs tracking-wide">
+            <tr>
+                <th class="px-4 py-3 font-semibold">ID</th>
+                <th class="px-4 py-3 font-semibold">Comercio</th>
+                <th class="px-4 py-3 font-semibold">Contacto</th>
+                <th class="px-4 py-3 font-semibold">Plan</th>
+                <th class="px-4 py-3 font-semibold">Estado</th>
+                <th class="px-4 py-3 font-semibold">Registro</th>
+                <th class="px-4 py-3 font-semibold text-center">Usuarios</th>
+                <th class="px-4 py-3 font-semibold text-center">Turnos</th>
+                <th class="px-4 py-3 font-semibold text-right">Acciones</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+            {% for fila in comercios %}
+            {% set c = fila.comercio %}
+            <tr class="hover:bg-gray-50 transition">
+                <td class="px-4 py-3 text-gray-400 font-mono">#{{ c.id }}</td>
+                <td class="px-4 py-3 font-semibold text-gray-800">{{ c.nombre }}</td>
+                <td class="px-4 py-3 text-gray-600">
+                    {% if c.telefono %}<div class="text-gray-500">{{ c.telefono }}</div>{% endif %}
+                    {% if c.email %}<div class="text-gray-500">{{ c.email }}</div>{% endif %}
+                    {% if not c.telefono and not c.email %}<span class="text-gray-400">-</span>{% endif %}
+                </td>
+                <td class="px-4 py-3">
+                    {% set plan = c.plan or 'DEMO' %}
+                    {% if plan == 'PRO' %}
+                    <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-violet-100 text-violet-700">Pro</span>
+                    {% elif plan == 'ESTANDAR' %}
+                    <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700">Estandar</span>
+                    {% else %}
+                    <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700">Demo</span>
+                    {% endif %}
+                </td>
+                <td class="px-4 py-3">
+                    {% set estado = c.estado or 'ACTIVO' %}
+                    {% if estado == 'MOROSO' %}
+                    <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-700">Moroso</span>
+                    {% elif estado == 'INACTIVO' %}
+                    <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">Inactivo</span>
+                    {% else %}
+                    <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">Activo</span>
+                    {% endif %}
+                </td>
+                <td class="px-4 py-3 text-gray-600">
+                    {% if c.fecha_registro %}{{ c.fecha_registro.strftime('%d/%m/%Y') }}{% else %}-{% endif %}
+                </td>
+                <td class="px-4 py-3 text-center font-semibold text-gray-700">{{ fila.total_usuarios }}</td>
+                <td class="px-4 py-3 text-center font-semibold text-gray-700">{{ fila.total_turnos }}</td>
+                <td class="px-4 py-3 text-right">
+                    <form method="post" action="/admin/comercios/{{ c.id }}/impersonar" class="inline">
+                        <button type="submit"
+                                class="px-3 py-1.5 rounded-lg text-xs font-semibold transition hover:opacity-80 active:opacity-70"
+                                style="background-color: var(--color-secundario); color: var(--texto-sobre-secundario);">
+                            Ingresar como Comercio
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="9" class="px-4 py-10 text-center text-gray-400">
+                    No hay comercios registrados todavia.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal nuevo comercio -->
+<div id="modal-comercio" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" aria-hidden="true">
+    <div class="absolute inset-0 bg-black/40" data-cerrar-modal></div>
+    <div class="relative w-full max-w-md bg-white rounded-2xl border border-gray-200 shadow-xl p-6">
+        <div class="flex items-start justify-between mb-4">
+            <div>
+                <h2 class="text-lg font-bold text-gray-800">Nuevo Comercio</h2>
+                <p class="text-sm text-gray-500">Alta manual del tenant y su usuario ADMIN</p>
+            </div>
+            <button type="button" data-cerrar-modal aria-label="Cerrar" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+        </div>
+
+        <form method="post" action="/admin/comercios" class="space-y-4">
+            <div>
+                <label for="input-nombre" class="block text-sm font-medium text-gray-700 mb-1">Nombre del comercio</label>
+                <input type="text" id="input-nombre" name="nombre" required
+                       class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2">
+            </div>
+            <div>
+                <label for="input-email" class="block text-sm font-medium text-gray-700 mb-1">Email del Admin</label>
+                <input type="email" id="input-email" name="email" required autocomplete="off"
+                       class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2">
+                <p class="text-xs text-gray-400 mt-1">Se creara el usuario ADMIN con una password temporal mostrada al guardar.</p>
+            </div>
+            <div>
+                <label for="select-plan" class="block text-sm font-medium text-gray-700 mb-1">Plan</label>
+                <select id="select-plan" name="plan" required
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2">
+                    {% for plan in planes %}
+                    <option value="{{ plan }}">{{ plan|title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex items-center justify-end gap-3 pt-2">
+                <button type="button" data-cerrar-modal class="text-sm font-medium text-gray-500 hover:text-gray-700 transition">Cancelar</button>
+                <button type="submit"
+                        class="px-6 py-2.5 rounded-xl text-sm font-semibold shadow-md hover:opacity-90 active:opacity-80 transition"
+                        style="background-color: var(--color-primario); color: var(--texto-sobre-primario);">
+                    Registrar comercio
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    (function() {
+        var modal = document.getElementById('modal-comercio');
+        var btn = document.getElementById('btn-nuevo-comercio');
+        function abrir() { modal.classList.remove('hidden'); modal.setAttribute('aria-hidden', 'false'); }
+        function cerrar() { modal.classList.add('hidden'); modal.setAttribute('aria-hidden', 'true'); }
+        btn.addEventListener('click', abrir);
+        modal.querySelectorAll('[data-cerrar-modal]').forEach(function(el) {
+            el.addEventListener('click', cerrar);
+        });
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') cerrar();
+        });
+    })();
+</script>
+{% endblock %}

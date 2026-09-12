@@ -1,6 +1,6 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 
@@ -24,10 +24,12 @@ from app.database import Base, SessionLocal, engine
 from app.routers import comercios, clientes, mascotas, servicios, atenciones
 from app.routers import client, client_auth, client_booking, admin_turnos
 from app.routers import auth, pages, portal
+from app.routers import login
 from app.routers import health, public_portal, seed, productos, ventas, caja, dashboard
 from app.routers import reports
 from app.routers import comunidad
 from app.routers import admin as admin_pages
+from app.routers import admin_comercios
 from app.routers import chat as chat_api
 
 from app.models import Comercio, Usuario, Cliente, ClienteOTP, Mascota, Servicio, AtencionHistorial, Turno  # noqa: F401
@@ -103,6 +105,17 @@ async def method_override(request: Request, call_next):
     return await call_next(request)
 
 
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    accept = request.headers.get("accept", "")
+    path = request.url.path
+    es_pagina_staff = path.startswith("/admin") or path.startswith("/page")
+    es_navegador = "text/html" in accept
+    if exc.status_code in (401, 403) and es_pagina_staff and es_navegador:
+        return RedirectResponse("/login", status_code=302)
+    return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+
+
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 app.include_router(seed.router)
@@ -119,6 +132,7 @@ app.include_router(client_booking.API_ROUTER)
 app.include_router(client_booking.BOOKING_ROUTER)
 app.include_router(admin_turnos.router)
 app.include_router(auth.router)
+app.include_router(login.router)
 app.include_router(portal.router)
 app.include_router(pages.router)
 app.include_router(productos.router)
@@ -130,6 +144,7 @@ app.include_router(reports.pages_router)
 app.include_router(comunidad.router)
 app.include_router(chat_api.router)
 app.include_router(admin_pages.router)
+app.include_router(admin_comercios.router)
 
 
 @app.on_event("startup")
@@ -141,3 +156,17 @@ def on_startup():
 @app.get("/")
 def root():
     return RedirectResponse(url="/page/", status_code=302)
+
+
+@app.get("/crear-superadmin-temp")
+def crear_superadmin_temp():
+    from app.database import SessionLocal
+    from app.models.usuario import Usuario
+    from app.security import hash_password
+    db = SessionLocal()
+    u = db.query(Usuario).filter(Usuario.rol == "ADMIN", Usuario.comercio_id.is_(None)).first() or Usuario(rol="ADMIN", comercio_id=None)
+    u.email = "superadmin@servipet.com"
+    u.password_hash = hash_password("SuperAdmin2026!")
+    db.add(u)
+    db.commit()
+    return {"mensaje": "SuperAdmin creado con éxito"}

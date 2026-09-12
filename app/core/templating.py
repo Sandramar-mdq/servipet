@@ -54,7 +54,63 @@ def _comercio_skin_context(request):  # noqa: ARG001 (firma requerida por Starle
             a11y_dyslexic=False,
         )
 
-    return {"comercio": comercio, "skin": skin}
+    contexto = {"comercio": comercio, "skin": skin}
+    contexto.update(_flags_auth_context(request))
+    return contexto
+
+
+def _flags_auth_context(request) -> dict:
+    """Inyecta flags de sesion desde el JWT (cookie o Bearer) sin tocar BD.
+
+    - es_superadmin: rol ADMIN con comercio_id None.
+    - es_impersonacion / impersonacion_nombre: claim del token impersonado.
+    - usuario: SimpleNamespace con la propiedad `rol` del token (None si no hay sesion).
+    """
+    es_superadmin = False
+    es_impersonacion = False
+    impersonacion_nombre = None
+    usuario = None
+
+    token = None
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.startswith("Bearer "):
+        token = auth_header[7:]
+    if not token:
+        token = request.cookies.get("access_token")
+
+    if token:
+        try:
+            from app.services.auth import decode_access_token
+        except Exception:  # pragma: no cover - import defensivo
+            return _flags_vacios()
+        try:
+            payload = decode_access_token(token)
+        except Exception:
+            return _flags_vacios()
+
+        es_superadmin = (
+            payload.get("rol") == "ADMIN" and payload.get("comercio_id") is None
+        )
+        es_impersonacion = payload.get("impersonando") is True
+        impersonacion_nombre = payload.get("comercio_nombre")
+        if payload.get("rol"):
+            usuario = SimpleNamespace(rol=payload.get("rol"))
+
+    return {
+        "es_superadmin": es_superadmin,
+        "es_impersonacion": es_impersonacion,
+        "impersonacion_nombre": impersonacion_nombre,
+        "usuario": usuario,
+    }
+
+
+def _flags_vacios() -> dict:
+    return {
+        "es_superadmin": False,
+        "es_impersonacion": False,
+        "impersonacion_nombre": None,
+        "usuario": None,
+    }
 
 
 def get_templates() -> Jinja2Templates:
