@@ -31,6 +31,7 @@ from app.routers import comunidad
 from app.routers import admin as admin_pages
 from app.routers import admin_comercios
 from app.routers import chat as chat_api
+from app.routers import legal
 
 from app.models import Comercio, Usuario, Cliente, ClienteOTP, Mascota, Servicio, AtencionHistorial, Turno  # noqa: F401
 
@@ -145,6 +146,7 @@ app.include_router(comunidad.router)
 app.include_router(chat_api.router)
 app.include_router(admin_pages.router)
 app.include_router(admin_comercios.router)
+app.include_router(legal.router)
 
 
 @app.on_event("startup")
