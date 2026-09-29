@@ -7,6 +7,8 @@
 
     var COMERCIO_ID = parseInt(dataEl.dataset.comercioId, 10) || 1;
     var ES_ADMIN = dataEl.dataset.esAdmin === 'true';
+    // Sin el helper cargado no se ofrecen los botones de piezas.
+    var SOLIDARIO_ACTIVO = dataEl.dataset.solidarioActivo === 'true' && !!window.ServipetMarketing;
 
     var API_BASE = '/api/v1/comunidad';
     var LIMIT = 20;
@@ -91,6 +93,12 @@
         } else if (aviso.estado !== 'ACTIVO') {
             html += '<button type="button" data-accion="reactivar" data-id="' + aviso.id + '" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-indigo-50 text-indigo-600 border border-indigo-200 hover:bg-indigo-100 active:bg-indigo-200 transition">↺ Reactivar</button>';
         }
+        if (SOLIDARIO_ACTIVO) {
+            html += '<button type="button" data-accion="cartel-pdf" data-id="' + aviso.id + '" ';
+            html += 'class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-100 active:bg-slate-200 transition">🖨 Cartel A4</button>';
+            html += '<button type="button" data-accion="cartel-placa" data-id="' + aviso.id + '" ';
+            html += 'class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-sky-50 text-sky-700 border border-sky-200 hover:bg-sky-100 active:bg-sky-200 transition">📱 Placa 9:16</button>';
+        }
         html += '<button type="button" data-accion="eliminar" data-id="' + aviso.id + '" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 active:bg-red-200 transition">🗑 Eliminar</button>';
         html += '</div>';
 
@@ -172,12 +180,51 @@
     // --- Paginacion ---
     btnCargarMas.addEventListener('click', function () { cargar(false); });
 
+    // --- Piezas del Modulo Solidario (cartel A4 / placa 9:16) ---
+    function generarPieza(accion, id, boton) {
+        var esPdf = accion === 'cartel-pdf';
+        var etiqueta = esPdf ? 'Generando cartel...' : 'Generando placa...';
+        var original = boton.textContent;
+
+        boton.disabled = true;
+        boton.textContent = etiqueta;
+
+        var opciones = esPdf
+            ? { nombre: 'cartel_' + id + '.pdf' }
+            : { nombre: 'placa_9x16_' + id + '.png' };
+
+        // Ruta relativa: `descargarConRefuerzo` ya antepone /api/v1/marketing.
+        return window.ServipetMarketing.descargarConRefuerzo(
+            '/solidaridad/avisos/' + id + '/' + (esPdf ? 'cartel.pdf' : 'placa-vertical.png'),
+            opciones
+        ).then(function (resultado) {
+            if (resultado.ok) {
+                window.ServipetMarketing.mostrarToast(
+                    esPdf ? 'Cartel A4 descargado.' : 'Placa 9:16 descargada.', 'exito');
+            } else if (resultado.estado === 'sesion') {
+                window.location.href = '/login';
+            } else if (resultado.estado !== 'duplicado') {
+                window.ServipetMarketing.mostrarToast(resultado.detalle, 'error');
+            }
+        }).catch(function () {
+            window.ServipetMarketing.mostrarToast('No se pudo generar la pieza.', 'error');
+        }).finally(function () {
+            boton.disabled = false;
+            boton.textContent = original;
+        });
+    }
+
     // --- Acciones de moderacion (delegacion) ---
     elLista.addEventListener('click', function (event) {
         var boton = event.target.closest('[data-accion]');
         if (!boton) return;
         var id = boton.dataset.id;
         var accion = boton.dataset.accion;
+
+        if (accion === 'cartel-pdf' || accion === 'cartel-placa') {
+            generarPieza(accion, id, boton);
+            return;
+        }
 
         var nuevoEstado = null;
         if (accion === 'resolver') nuevoEstado = 'RESUELTO';

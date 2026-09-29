@@ -1,4 +1,4 @@
-const CACHE_NAME = "servipet-v6";
+const CACHE_NAME = "servipet-v7";
 const STATIC_PREFIX = "/static/";
 
 const PRECACHE_URLS = [
@@ -8,6 +8,11 @@ const PRECACHE_URLS = [
     "/static/icons/icon-192.svg",
     "/static/icons/icon-512.svg",
     "/static/icons/favicon.ico",
+    "/static/js/marketing_ui.js",
+    "/static/js/marketing_dashboard.js",
+    "/static/js/marketing_kit.js",
+    "/static/js/marketing_mascota.js",
+    "/static/js/marketing_optin.js",
 ];
 
 self.addEventListener("install", (event) => {

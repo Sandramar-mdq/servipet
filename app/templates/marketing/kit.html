@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}Kit de Marketing — Servipet{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800">Kit de Marketing</h1>
+            <p class="text-sm text-gray-500">Genera placas cuadradas 1:1 para tus promociones, en un clic.</p>
+        </div>
+        <a href="/page/dashboard" class="text-sm font-medium text-gray-500 hover:text-gray-700 transition">Volver al dashboard</a>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <!-- Formulario -->
+        <form id="form-kit" class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 space-y-4" novalidate>
+
+            <div>
+                <label for="kit-titulo" class="block text-sm font-medium text-gray-700 mb-1">
+                    Titulo <span class="text-red-600" aria-hidden="true">*</span>
+                </label>
+                <input type="text" id="kit-titulo" required minlength="3" maxlength="60"
+                       placeholder="Bano y Pelado 2x1"
+                       aria-describedby="kit-titulo-ayuda"
+                       class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2"
+                       style="--tw-ring-color: var(--color-primario);">
+                <p id="kit-titulo-ayuda" class="text-xs text-gray-500 mt-1">Entre 3 y 60 caracteres.</p>
+            </div>
+
+            <div>
+                <label for="kit-beneficio" class="block text-sm font-medium text-gray-700 mb-1">Beneficio destacado</label>
+                <input type="text" id="kit-beneficio" maxlength="80" placeholder="2x1 en bano y pelado"
+                       class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2"
+                       style="--tw-ring-color: var(--color-primario);">
+                <p class="text-xs text-gray-500 mt-1">Es el texto mas grande de la placa. Si lo deixas vacio se usa el descuento.</p>
+            </div>
+
+            <div>
+                <label for="kit-descuento" class="block text-sm font-medium text-gray-700 mb-1">Descuento</label>
+                <input type="text" id="kit-descuento" maxlength="40" placeholder="15% OFF"
+                       class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2"
+                       style="--tw-ring-color: var(--color-primario);">
+            </div>
+
+            <div>
+                <label for="kit-condiciones" class="block text-sm font-medium text-gray-700 mb-1">Condiciones</label>
+                <input type="text" id="kit-condiciones" maxlength="200" placeholder="Vigente durante todo el mes de octubre"
+                       class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2"
+                       style="--tw-ring-color: var(--color-primario);">
+            </div>
+
+            <fieldset class="border-t border-gray-100 pt-4">
+                <legend class="text-sm font-medium text-gray-700 mb-3">Colores</legend>
+                <p class="text-xs text-gray-500 mb-3">
+                    Desmarcando el branding se usan los colores por defecto de Servipet.
+                </p>
+
+                <div class="flex items-center justify-between gap-4 mb-4">
+                    <span id="label-usar-branding" class="text-sm text-gray-700">Usar los colores de mi comercio</span>
+                    <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                        <input type="checkbox" id="kit-usar-branding" checked class="sr-only peer"
+                               aria-labelledby="label-usar-branding">
+                        <div class="w-11 h-6 bg-gray-300 peer-focus:ring-4 rounded-full peer transition-colors
+                                    after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white
+                                    after:rounded-full after:h-5 after:w-5 after:transition-transform
+                                    peer-checked:after:translate-x-5"
+                             style="--tw-ring-color: var(--color-primario);"></div>
+                    </label>
+                </div>
+
+                <div id="kit-colores" class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="kit-color-primario" class="block text-sm font-medium text-gray-700 mb-1">Primario</label>
+                        <input type="color" id="kit-color-primario" value="{{ comercio.color_primario|default('#1E40AF') }}"
+                               class="w-full h-11 rounded-xl border border-gray-300 cursor-pointer bg-white p-1">
+                    </div>
+                    <div>
+                        <label for="kit-color-secundario" class="block text-sm font-medium text-gray-700 mb-1">Secundario</label>
+                        <input type="color" id="kit-color-secundario" value="{{ comercio.color_secundario|default('#0D9488') }}"
+                               class="w-full h-11 rounded-xl border border-gray-300 cursor-pointer bg-white p-1">
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset class="border-t border-gray-100 pt-4">
+                <legend class="text-sm font-medium text-gray-700 mb-3">Registro</legend>
+                <div class="flex items-center justify-between gap-4">
+                    <div class="min-w-0">
+                        <span id="label-registrar" class="text-sm text-gray-700">Guardar esta placa en el historial</span>
+                        <p class="text-xs text-gray-500">Sin esto podes producir tantas variantes como quieras.</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                        <input type="checkbox" id="kit-registrar" class="sr-only peer" aria-labelledby="label-registrar">
+                        <div class="w-11 h-6 bg-gray-300 peer-focus:ring-4 rounded-full peer transition-colors
+                                    after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white
+                                    after:rounded-full after:h-5 after:w-5 after:transition-transform
+                                    peer-checked:after:translate-x-5"
+                             style="--tw-ring-color: var(--color-primario);"></div>
+                    </label>
+                </div>
+            </fieldset>
+
+            <p id="kit-error" class="hidden text-sm text-red-600" role="alert"></p>
+
+            <button type="submit" id="kit-generar"
+                    class="w-full py-3 rounded-2xl text-sm font-semibold shadow-md hover:opacity-90 active:opacity-80 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    style="background-color: var(--color-primario); color: var(--texto-sobre-primario);">
+                Generar y descargar placa
+            </button>
+        </form>
+
+        <!-- Vista previa -->
+        <div class="lg:sticky lg:top-24 self-start">
+            <h2 class="text-sm font-semibold text-gray-800 mb-2">Vista previa (1:1)</h2>
+            <div id="kit-preview" class="rounded-2xl overflow-hidden border border-gray-200 shadow-sm aspect-square"
+                 role="img" aria-label="Vista previa de la placa"
+                 data-comercio-nombre="{{ comercio.nombre }}">
+                <div id="kit-preview-barra" class="h-[14%]"></div>
+                <div id="kit-preview-cuerpo" class="h-[72%] flex flex-col items-center justify-center gap-3 px-6 text-center">
+                    <p id="kit-preview-titulo" class="font-bold leading-tight"></p>
+                    <p id="kit-preview-beneficio" class="font-bold"></p>
+                    <p id="kit-preview-subtitulo" class="text-xs"></p>
+                </div>
+                <div id="kit-preview-pie" class="h-[14%] flex items-center justify-center gap-2">
+                    <span id="kit-preview-comercio" class="text-xs font-bold"></span>
+                    <span class="text-[10px] opacity-80">Generado con el Kit de Marketing de Servipet</span>
+                </div>
+            </div>
+            <p class="text-xs text-gray-500 mt-2">
+                La placa real se descarga en 1080x1080 PNG, lista para Instagram, WhatsApp o cartelería.
+            </p>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/marketing_ui.js"></script>
+<script src="/static/js/marketing_kit.js"></script>
+{% endblock %}

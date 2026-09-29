@@ -7,7 +7,8 @@
 <!-- Datos para JS -->
 <div id="comunidad-admin-data"
      data-comercio-id="{{ comercio.id if comercio else 1 }}"
-     data-es-admin="{{ 'true' if es_admin else 'false' }}"></div>
+     data-es-admin="{{ 'true' if es_admin else 'false' }}"
+     data-solidario-activo="{{ 'true' if comercio and comercio.habilitar_modulo_solidario else 'false' }}"></div>
 
 <!-- Encabezado -->
 <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
@@ -47,6 +48,19 @@
     <p id="optin-error" class="hidden text-sm text-red-600 mt-3"></p>
 </div>
 
+<!-- Aviso: Modulo Solidario deshabilitado -->
+{% if not (comercio and comercio.habilitar_modulo_solidario) %}
+<div class="bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl p-4 mb-6 text-sm">
+    <p class="font-semibold mb-1">Modulo Solidario desactivado</p>
+    <p>Sin el opt-in no se pueden generar los carteles A4 ni las placas 9:16 de los avisos.</p>
+    {% if es_admin %}
+    <a href="/admin/personalizacion#modulos" class="inline-block mt-2 underline font-medium">Activar el modulo</a>
+    {% else %}
+    <p class="mt-2 text-xs">Solo un administrador puede activarlo.</p>
+    {% endif %}
+</div>
+{% endif %}
+
 <!-- Filtros por estado -->
 <div class="flex gap-2 overflow-x-auto pb-2 mb-4" role="tablist" aria-label="Filtrar por estado">
     <button data-estado="" class="filtro-estado shrink-0 px-4 py-2 rounded-xl text-sm font-medium border transition active:opacity-70 bg-indigo-600 text-white border-indigo-600">Todos</button>
@@ -72,5 +86,6 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="/static/js/marketing_ui.js"></script>
 <script src="/static/js/comunidad_admin.js"></script>
 {% endblock %}

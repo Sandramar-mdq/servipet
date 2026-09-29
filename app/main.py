@@ -32,6 +32,8 @@ from app.routers import admin as admin_pages
 from app.routers import admin_comercios
 from app.routers import chat as chat_api
 from app.routers import legal
+from app.routers import marketing
+from app.routers import marketing_pages
 
 from app.models import Comercio, Usuario, Cliente, ClienteOTP, Mascota, Servicio, AtencionHistorial, Turno  # noqa: F401
 
@@ -136,6 +138,7 @@ app.include_router(auth.router)
 app.include_router(login.router)
 app.include_router(portal.router)
 app.include_router(pages.router)
+app.include_router(marketing_pages.router)
 app.include_router(productos.router)
 app.include_router(ventas.router)
 app.include_router(caja.router)
@@ -147,6 +150,7 @@ app.include_router(chat_api.router)
 app.include_router(admin_pages.router)
 app.include_router(admin_comercios.router)
 app.include_router(legal.router)
+app.include_router(marketing.router)
 
 
 @app.on_event("startup")

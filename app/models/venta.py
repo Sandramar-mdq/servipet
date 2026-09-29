@@ -14,7 +14,7 @@ class Venta(Base):
     cliente_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("clientes.id"), nullable=True)
     usuario_id: Mapped[int] = mapped_column(Integer, ForeignKey("usuarios.id"), nullable=False)
     caja_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("cajas.id"), nullable=True)
-    fecha: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    fecha: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.now)
     medio_pago: Mapped[str] = mapped_column(String(20), nullable=False, default="efectivo")
     subtotal: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     descuento: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)

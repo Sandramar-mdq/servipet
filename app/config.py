@@ -29,6 +29,11 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 días
 
+    # Kit de Marketing B2B (Etapa 12) - TTF opcional para las placas PNG.
+    # Si no se define, pieza_service busca fuentes del sistema y cae a
+    # ImageFont.load_default(size=...).
+    SERVIPET_FUENTE_PATH: str | None = None
+
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 
 

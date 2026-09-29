@@ -43,6 +43,18 @@ class Comercio(Base):
     # --- Red comunitaria (opt-in) ---
     habilitar_red_comunitaria: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
+    # --- Modulo solidario (opt-in) ---
+    habilitar_modulo_solidario: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="0"
+    )
+    zona_barrio: Mapped[str | None] = mapped_column(String(100), nullable=True)
+
+    # --- Fidelizacion cumpleaños (opt-in) ---
+    habilitar_cumpleanos: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="0"
+    )
+    beneficio_cumpleanos: Mapped[str | None] = mapped_column(String(200), nullable=True)
+
     # --- Skins / apariencia (Etapa 8.1) ---
     tema_preset: Mapped[str] = mapped_column(String(50), nullable=False, default="clasico_paws")
     color_primario: Mapped[str] = mapped_column(String(7), nullable=False, default="#1E40AF")
@@ -63,4 +75,7 @@ class Comercio(Base):
     usuarios: Mapped[list["Usuario"]] = relationship("Usuario", back_populates="comercio")  # noqa: F821
     avisos_comunitarios: Mapped[list["AvisoComunitario"]] = relationship(  # noqa: F821
         "AvisoComunitario", back_populates="comercio"
+    )
+    piezas_generadas: Mapped[list["PiezaGenerada"]] = relationship(  # noqa: F821
+        "PiezaGenerada", back_populates="comercio"
     )

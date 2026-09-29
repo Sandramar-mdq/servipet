@@ -21,9 +21,7 @@
     var KEY_HISTORIAL = 'servipet_chat_historial';
     var MAX_HISTORIAL = 20;
     var SALUDO =
-        'Hola! Soy el asistente virtual de ' +
-        (PANEL.dataset.comercioNombre || 'Servipet') +
-        '. Puedo ayudarte con horarios, servicios y precios, o consultar tus turnos.';
+        'Hola! Nos alegra que estes aqui! Contanos en que podemos ayudarte';
 
     var estado = {
         abierto: false,

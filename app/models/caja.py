@@ -13,7 +13,7 @@ class Caja(Base):
     comercio_id: Mapped[int] = mapped_column(Integer, ForeignKey("comercios.id"), nullable=False)
     usuario_apertura_id: Mapped[int] = mapped_column(Integer, ForeignKey("usuarios.id"), nullable=False)
     usuario_cierre_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("usuarios.id"), nullable=True)
-    fecha_apertura: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    fecha_apertura: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.now)
     fecha_cierre: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     monto_inicial: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     monto_final_esperado: Mapped[float | None] = mapped_column(Float, nullable=True)

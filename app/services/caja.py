@@ -28,7 +28,7 @@ def abrir_caja(
         monto_inicial=monto_inicial,
         notas_apertura=notas,
         estado="ABIERTA",
-        fecha_apertura=datetime.utcnow(),
+        fecha_apertura=datetime.now(),
     )
     db.add(caja)
     db.commit()
@@ -92,7 +92,7 @@ def cerrar_caja(
     caja.monto_final_esperado = caja.monto_inicial + ingresos - egresos
     caja.monto_final_real = monto_final_real
     caja.usuario_cierre_id = usuario_id
-    caja.fecha_cierre = datetime.utcnow()
+    caja.fecha_cierre = datetime.now()
     caja.notas_cierre = notas
     caja.estado = "CERRADA"
 

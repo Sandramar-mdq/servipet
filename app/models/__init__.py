@@ -14,6 +14,12 @@ from app.models.caja import Caja
 from app.models.caja_movimiento import CajaMovimiento
 from app.models.aviso_comunitario import AvisoComunitario
 from app.models.chat import ChatMensaje, ChatSesion
+from app.models.pieza_generada import (
+    FormatoPieza,
+    PiezaGenerada,
+    ReferenciaPieza,
+    TipoPieza,
+)
 
 __all__ = [
     "Comercio",
@@ -33,4 +39,8 @@ __all__ = [
     "AvisoComunitario",
     "ChatSesion",
     "ChatMensaje",
+    "PiezaGenerada",
+    "TipoPieza",
+    "FormatoPieza",
+    "ReferenciaPieza",
 ]

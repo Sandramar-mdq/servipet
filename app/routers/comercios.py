@@ -60,7 +60,12 @@ def configurar_opt_in_red_comunitaria(
     current_user: Usuario = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Activa/desactiva la red comunitaria (solo ADMIN del comercio o global)."""
+    """Activa/desactiva los modulos del comercio (solo ADMIN del comercio o global).
+
+    `habilitar_red_comunitaria` se aplica siempre (campo obligatorio). Los modulos
+    de Marketing (`habilitar_modulo_solidario`, `habilitar_cumpleanos`) tienen
+    semantica patch: si vienen en `None` el flag existente queda intacto.
+    """
     if current_user.rol != "ADMIN":
         raise HTTPException(status_code=403, detail="Permisos insuficientes")
     if current_user.comercio_id is not None and current_user.comercio_id != comercio_id:
@@ -71,6 +76,10 @@ def configurar_opt_in_red_comunitaria(
         raise HTTPException(status_code=404, detail="Comercio no encontrado")
 
     comercio.habilitar_red_comunitaria = datos.habilitar_red_comunitaria
+    if datos.habilitar_modulo_solidario is not None:
+        comercio.habilitar_modulo_solidario = datos.habilitar_modulo_solidario
+    if datos.habilitar_cumpleanos is not None:
+        comercio.habilitar_cumpleanos = datos.habilitar_cumpleanos
     db.commit()
     db.refresh(comercio)
     return comercio

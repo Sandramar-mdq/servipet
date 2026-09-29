@@ -18,6 +18,10 @@ class Cliente(Base):
     email: Mapped[str] = mapped_column(String(150), nullable=True)
     notas: Mapped[str | None] = mapped_column(Text, nullable=True)
     foto_webp: Mapped[str | None] = mapped_column(Text, nullable=True)
+    zona_barrio: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    acepta_cumpleanos: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="0"
+    )
     activo: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
     comercio: Mapped["Comercio"] = relationship("Comercio", back_populates="clientes")  # noqa: F821

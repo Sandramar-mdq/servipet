@@ -220,3 +220,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Assets sueltos de trabajo (Etapa 12)
+imagen_chatbot.jpg

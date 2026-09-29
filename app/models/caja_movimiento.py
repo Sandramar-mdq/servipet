@@ -15,6 +15,6 @@ class CajaMovimiento(Base):
     monto: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     descripcion: Mapped[str] = mapped_column(String(200), nullable=False)
     venta_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("ventas.id"), nullable=True)
-    creado_en: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    creado_en: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.now)
 
     caja: Mapped["Caja"] = relationship("Caja", back_populates="movimientos")  # noqa: F821
