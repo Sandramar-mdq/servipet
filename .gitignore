@@ -226,3 +226,6 @@ imagen_chatbot.jpg
 
 # Dump SQL de verificacion post-deploy (contiene datos reales y credenciales)
 preview.sql
+
+# Lock files de Office (~$ se crea al abrir .docx/.xlsx y guarda metadata local)
+~$*
