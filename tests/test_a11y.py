@@ -167,19 +167,27 @@ class TestResolverSkinTextoAccesible:
 
 
 class TestValidacionModoA11ySchema:
-    def test_modo_desconocido_rechazado_en_create(self, client):
-        resp = client.post("/comercios/", json={"nombre": "C", "a11y_modo": "modo_loco"})
+    def test_modo_desconocido_rechazado_en_create(self, client, superadmin_headers):
+        resp = client.post(
+            "/comercios/", json={"nombre": "C", "a11y_modo": "modo_loco"}, headers=superadmin_headers
+        )
         assert resp.status_code == 422
 
     @pytest.mark.parametrize("modo", A11Y_MODOS)
-    def test_modos_conocidos_aceptados_en_create(self, client, modo):
-        resp = client.post("/comercios/", json={"nombre": f"C {modo}", "a11y_modo": modo})
+    def test_modos_conocidos_aceptados_en_create(self, client, superadmin_headers, modo):
+        resp = client.post(
+            "/comercios/", json={"nombre": f"C {modo}", "a11y_modo": modo}, headers=superadmin_headers
+        )
         assert resp.status_code == 201, resp.text
         assert resp.json()["a11y_modo"] == modo
 
-    def test_modo_desconocido_rechazado_en_update(self, client):
-        comercio_id = client.post("/comercios/", json={"nombre": "C"}).json()["id"]
-        resp = client.put(f"/comercios/{comercio_id}", json={"a11y_modo": "solarizado"})
+    def test_modo_desconocido_rechazado_en_update(self, client, superadmin_headers):
+        comercio_id = client.post(
+            "/comercios/", json={"nombre": "C"}, headers=superadmin_headers
+        ).json()["id"]
+        resp = client.put(
+            f"/comercios/{comercio_id}", json={"a11y_modo": "solarizado"}, headers=superadmin_headers
+        )
         assert resp.status_code == 422
 
 

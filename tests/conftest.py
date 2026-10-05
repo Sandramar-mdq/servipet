@@ -8,6 +8,10 @@ from sqlalchemy.pool import StaticPool
 
 os.environ["DATABASE_URL"] = "sqlite:///:memory:"
 os.environ["SECRET_KEY"] = "test-secret-key-for-testing-only"
+# La app corre con DEBUG=false en los tests, y Settings._validar_configuracion
+# se niega a arrancar si CORS_ORIGINS queda vacio en ese modo. Se declara un
+# origen dummy para ejercitar el camino de produccion.
+os.environ["CORS_ORIGINS"] = "http://testserver"
 
 from app.database import Base, get_db  # noqa: E402
 from app.main import app  # noqa: E402
@@ -81,6 +85,40 @@ def admin_user(client):
 @pytest.fixture
 def admin_headers(admin_user):
     return {"Authorization": f"Bearer {admin_user['access_token']}"}
+
+
+@pytest.fixture
+def superadmin_user(client):
+    """SuperAdmin global: rol ADMIN con comercio_id None.
+
+    Necesario para las operaciones de plataforma (`GET/POST /comercios/`,
+    `DELETE /comercios/{id}`), que a partir de la Iteracion 3 exigen
+    `require_superadmin` y no cualquier Admin de comercio.
+    """
+    db = TestingSessionLocal()
+    try:
+        db.add(Usuario(
+            email="super@test.com",
+            password_hash=hash_password("super123"),
+            rol="ADMIN",
+            comercio_id=None,
+            activo=True,
+        ))
+        db.commit()
+    finally:
+        db.close()
+
+    resp = client.post("/auth/login", json={
+        "email": "super@test.com",
+        "password": "super123",
+    })
+    assert resp.status_code == 200, resp.text
+    return resp.json()
+
+
+@pytest.fixture
+def superadmin_headers(superadmin_user):
+    return {"Authorization": f"Bearer {superadmin_user['access_token']}"}
 
 
 @pytest.fixture

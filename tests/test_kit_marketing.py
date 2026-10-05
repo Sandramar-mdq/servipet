@@ -6,7 +6,6 @@ campana como necesite. La auditoria es opt-in via `registrar=true`.
 
 import io
 
-import pytest
 from PIL import Image
 
 from app.models.comercio import Comercio

@@ -21,9 +21,14 @@ def _activar_optin(client, admin_headers, comercio_id=1):
     return resp
 
 
-def _crear_comercio_sin_optin(client):
-    """Crea un comercio nuevo (sin red comunitaria) via API publica."""
-    resp = client.post("/comercios/", json={"nombre": "Comercio Sin Red"})
+def _crear_comercio_sin_optin(client, superadmin_headers):
+    """Crea un comercio nuevo (sin red comunitaria) via la API de plataforma.
+
+    Desde la Iteracion 3 `POST /comercios/` exige SuperAdmin (`require_superadmin`).
+    """
+    resp = client.post(
+        "/comercios/", json={"nombre": "Comercio Sin Red"}, headers=superadmin_headers
+    )
     assert resp.status_code == 201, resp.text
     return resp.json()["id"]
 
@@ -94,8 +99,8 @@ class TestFeedPublico:
         resp = client.get(f"{BASE}/999/avisos")
         assert resp.status_code == 404
 
-    def test_feed_sin_optin_devuelve_403(self, client):
-        comercio_id = _crear_comercio_sin_optin(client)
+    def test_feed_sin_optin_devuelve_403(self, client, superadmin_headers):
+        comercio_id = _crear_comercio_sin_optin(client, superadmin_headers)
         resp = client.get(f"{BASE}/{comercio_id}/avisos")
         assert resp.status_code == 403
         assert "deshabilitada" in resp.json()["detail"]
@@ -436,8 +441,8 @@ class TestListadoAdmin:
         resp = client.get(f"{BASE}/admin/1/avisos", headers=auth_headers)
         assert resp.status_code == 403
 
-    def test_otro_comercio_denegado(self, client, admin_headers):
-        otro_id = _crear_comercio_sin_optin(client)
+    def test_otro_comercio_denegado(self, client, admin_headers, superadmin_headers):
+        otro_id = _crear_comercio_sin_optin(client, superadmin_headers)
         resp = client.get(f"{BASE}/admin/{otro_id}/avisos", headers=admin_headers)
         assert resp.status_code == 403
 

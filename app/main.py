@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
@@ -25,7 +27,7 @@ from app.routers import comercios, clientes, mascotas, servicios, atenciones
 from app.routers import client, client_auth, client_booking, admin_turnos
 from app.routers import auth, pages, portal
 from app.routers import login
-from app.routers import health, public_portal, seed, productos, ventas, caja, dashboard
+from app.routers import health, public_portal, productos, ventas, caja, dashboard
 from app.routers import reports
 from app.routers import comunidad
 from app.routers import admin as admin_pages
@@ -64,14 +66,30 @@ def init_db_seeding() -> None:
         db.close()
 
 
-app = FastAPI(title=settings.APP_NAME, debug=settings.DEBUG)
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    """Arranque de la app (patron lifespan, reemplaza @app.on_event("startup")).
+
+    El I/O de bloque ocurre antes de que uvicorn acepte trafico, asi que no hace
+    falta correrlo en un hilo. `init_db_seeding` ya traga sus errores para no
+    impedir el arranque en Render.
+    """
+    Base.metadata.create_all(bind=engine)
+    init_db_seeding()
+    yield
+
+
+app = FastAPI(title=settings.APP_NAME, debug=settings.DEBUG, lifespan=lifespan)
 app.openapi = _custom_openapi
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=settings.cors_origins,
+    # Sin allow_credentials: el login deja cookie access_token pero combinarla
+    # con allow_origins=["*"] es una combinacion invalida en Starlette. El Bearer
+    # por header sigue funcionando y la cookie no viaja cross-origin.
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
 )
 
 
@@ -121,7 +139,6 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
-app.include_router(seed.router)
 app.include_router(health.router)
 app.include_router(public_portal.router)
 app.include_router(comercios.router)
@@ -153,26 +170,6 @@ app.include_router(legal.router)
 app.include_router(marketing.router)
 
 
-@app.on_event("startup")
-def on_startup():
-    Base.metadata.create_all(bind=engine)
-    init_db_seeding()
-
-
 @app.get("/")
 def root():
     return RedirectResponse(url="/page/", status_code=302)
-
-
-@app.get("/crear-superadmin-temp")
-def crear_superadmin_temp():
-    from app.database import SessionLocal
-    from app.models.usuario import Usuario
-    from app.security import hash_password
-    db = SessionLocal()
-    u = db.query(Usuario).filter(Usuario.rol == "ADMIN", Usuario.comercio_id.is_(None)).first() or Usuario(rol="ADMIN", comercio_id=None)
-    u.email = "superadmin@servipet.com"
-    u.password_hash = hash_password("SuperAdmin2026!")
-    db.add(u)
-    db.commit()
-    return {"mensaje": "SuperAdmin creado con éxito"}

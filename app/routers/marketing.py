@@ -26,7 +26,7 @@ from sqlalchemy.orm import Session
 
 from app.core.downloads import descarga_archivo
 from app.database import get_db
-from app.dependencies.auth import require_roles
+from app.dependencies.auth import require_roles, verificar_tenant
 from app.models.comercio import Comercio
 from app.models.mascota import Mascota
 from app.models.pieza_generada import FormatoPieza, TipoPieza
@@ -58,12 +58,11 @@ def _admin(user: Usuario = Depends(require_roles("ADMIN"))) -> Usuario:
 
 
 def _verificar_tenant(user: Usuario, comercio_id: int) -> None:
-    """Impide que un Admin/Empleado acceda a piezas de otro comercio.
+    """Alias del helper compartido (app.dependencies.auth.verificar_tenant).
 
-    Un SuperAdmin tiene `comercio_id is None` y por lo tanto pasa la validacion.
+    Se mantiene el nombre local para no tocar los ~8 call sites del router.
     """
-    if user.comercio_id is not None and user.comercio_id != comercio_id:
-        raise HTTPException(status_code=403, detail="Permisos insuficientes")
+    verificar_tenant(user, comercio_id)
 
 
 def _optin(db: Session, comercio_id: int, atributo: str, mensaje: str) -> Comercio:

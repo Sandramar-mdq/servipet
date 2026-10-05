@@ -223,3 +223,6 @@ __marimo__/
 
 # Assets sueltos de trabajo (Etapa 12)
 imagen_chatbot.jpg
+
+# Dump SQL de verificacion post-deploy (contiene datos reales y credenciales)
+preview.sql

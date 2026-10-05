@@ -3,14 +3,44 @@ services:
     name: servipet
     runtime: python
     plan: free
-    buildCommand: pip install -r requirements.txt
+    buildCommand: python -m pip install --upgrade pip && pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
-    preDeployCommand: python init_db.py
-    healthCheckPath: /cliente/login
+    # init_db.py ejecuta Base.metadata.create_all (app/main.py lo hace igual al
+    # arrancar) y es obligatorio antes de Alembic: las migraciones 0001/0004/0005/
+    # 0009 crean tablas con FK a comercios, clientes, usuarios y turnos, y ninguna
+    # migracion crea esas tablas base. Sin init_db.py, `upgrade head` falla en 0001.
+    preDeployCommand: python init_db.py && python -m alembic upgrade head
+    # /api/v1/health (app/routers/health.py) devuelve un dict literal sin I/O ni
+    # acceso a la BD. /cliente/login renderiza Jinja y pesa de mas para un probe.
+    healthCheckPath: /api/v1/health
     envVars:
       - key: DATABASE_URL
         sync: false
       - key: SECRET_KEY
+        sync: false
+      # SuperAdmin inicial. Consumida por scripts/create_superadmin.py
+      # (lee os.environ, no Settings).
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      # Jerarquia RBAC de 4 niveles de scripts/seed_alpha.py. Sin defaults: si
+      # falta alguna, el script aborta sin tocar la BD.
+      - key: ALPHA_ADMIN_EMAIL
+        sync: false
+      - key: ALPHA_ADMIN_PASSWORD
+        sync: false
+      - key: ALPHA_EMPLEADO_EMAIL
+        sync: false
+      - key: ALPHA_EMPLEADO_PASSWORD
+        sync: false
+      - key: ALPHA_CLIENTE_EMAIL
+        sync: false
+      - key: ALPHA_CLIENTE_PASSWORD
+        sync: false
+      # Obligatoria con DEBUG=false: Settings._validar_configuracion se niega a
+      # arrancar si queda vacia, para no exponer allow_origins=["*"] en produccion.
+      - key: CORS_ORIGINS
         sync: false
       - key: NOTIFICATION_PROVIDER
         value: log

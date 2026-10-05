@@ -18,7 +18,7 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.core.templating import get_templates
 from app.database import get_db
-from app.dependencies.auth import get_current_user
+from app.dependencies.auth import require_superadmin
 from app.models.cliente import Cliente
 from app.models.comercio import Comercio
 from app.models.turno import Turno
@@ -31,13 +31,6 @@ templates = get_templates()
 PLANES = ("DEMO", "ESTANDAR", "PRO")
 ESTADOS = ("ACTIVO", "INACTIVO", "MOROSO")
 COOKIE_MAX_AGE = 60 * 60 * 24 * 7
-
-
-def require_superadmin(user: Usuario = Depends(get_current_user)) -> Usuario:
-    """Solo el SuperAdmin global (ADMIN sin comercio asignado) pasa."""
-    if user.rol != "ADMIN" or user.comercio_id is not None:
-        raise HTTPException(status_code=403, detail="Permisos insuficientes")
-    return user
 
 
 def require_impersonacion(request: Request) -> dict:

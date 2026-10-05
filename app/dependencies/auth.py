@@ -67,3 +67,28 @@ def require_roles(*roles_permitidos: str) -> Callable:
         return current_user
 
     return _check
+
+
+def require_superadmin(user: Usuario = Depends(get_current_user)) -> Usuario:
+    """Solo el SuperAdmin global (ADMIN sin comercio asignado) pasa.
+
+    El proyecto no tiene un rol "SUPERADMIN": es la convencion
+    ``rol == "ADMIN" and comercio_id is None`` (``Usuario.comercio_id`` es
+    nullable justamente para esto).
+    """
+    if user.rol != "ADMIN" or user.comercio_id is not None:
+        raise HTTPException(status_code=403, detail="Permisos insuficientes")
+    return user
+
+
+def verificar_tenant(user: Usuario, comercio_id: int) -> None:
+    """Impide que un Admin/Empleado acceda a datos de otro comercio.
+
+    Levanta 403 si el usuario tiene comercio asignado y no coincide con el
+    recurso. Un SuperAdmin (``comercio_id is None``) pasa siempre: su acceso
+    transversal es intencional.
+
+    Reemplaza la copia local que vivia en ``app.routers.marketing._verificar_tenant``.
+    """
+    if user.comercio_id is not None and user.comercio_id != comercio_id:
+        raise HTTPException(status_code=403, detail="Permisos insuficientes")

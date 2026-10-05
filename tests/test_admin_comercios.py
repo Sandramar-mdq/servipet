@@ -30,23 +30,6 @@ def _login_headers(client, email, password):
 
 
 @pytest.fixture
-def superadmin_headers(client):
-    db = TestingSessionLocal()
-    try:
-        db.add(Usuario(
-            email="super@test.com",
-            password_hash=hash_password("super123"),
-            rol="ADMIN",
-            comercio_id=None,
-            activo=True,
-        ))
-        db.commit()
-    finally:
-        db.close()
-    return _login_headers(client, "super@test.com", "super123")
-
-
-@pytest.fixture
 def empleado_headers(client, admin_user):
     db = TestingSessionLocal()
     try:

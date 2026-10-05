@@ -257,7 +257,6 @@ def proximos_cumpleanos(
         proximo = proximo_aniversario(mascota.fecha_nacimiento, hoy)
         if proximo > limite:
             continue
-        cliente = db.query(Cliente).filter(Cliente.id == mascota.cliente_id).first()
         comercio = db.query(Comercio).filter(Comercio.id == comercio_id).first()
         beneficio = None
         if comercio is not None:

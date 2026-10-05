@@ -2,30 +2,30 @@
 
 **Documento Ejecutivo de Ingeniería de Software y Trazabilidad Funcional**  
 **Proyecto:** Servipet (Progressive Web App & Multi-Tenant Management Platform)  
-**Fecha de Consolidación:** 29 de Septiembre de 2026  
+**Fecha de Consolidación:** 5 de Octubre de 2026  
 **Dirección de Desarrollo & Arquitectura:** Sandra L. Domínguez  
-**Estado Final del Repositorio:** v1.0 (Completado, Desplegado y Verificado — 443/443 Tests Aprobados en Verde)
+**Estado Final del Repositorio:** v1.0 (Completado, Desplegado, Auditado y Verificado — 481 Passed / 4 Xfailed / 0 Ruff Errors)
 
 ---
 
 ## 1. Resumen Ejecutivo de Arquitectura
 
-**Servipet** nació y se consolidó como una solución SaaS de gestión integral para comercios del sector veterinario, peluquerías caninas, paseadores y guarderías de mascotas. Desarrollada bajo una arquitectura *monolítica modular cloud-native* orientada a entornos de alta disponibilidad, la plataforma combina la potencia de **FastAPI** en el backend con **PostgreSQL (Neon Cloud)** como motor de persistencia multitenant, un motor de plantillas **Jinja2** integrado con **Tailwind/Bootstrap**, capacidades **PWA (Progressive Web App)** con soporte offline y la integración nativa de **Inteligencia Artificial Conversacional (Gemini API con Function Calling)** y un **Motor de Generación de Piezas Gráficas y Marketing B2B**.
+**Servipet** nació y se consolidó como una solución SaaS de gestión integral para comercios del sector veterinario, peluquerías caninas, paseadores y guarderías de mascotas. Desarrollada bajo una arquitectura *monolítica modular cloud-native* orientada a entornos de alta disponibilidad, la plataforma combina la potencia de **FastAPI** en el backend con **PostgreSQL (Neon Cloud)** como motor de persistencia multitenant, un motor de plantillas **Jinja2** integrado con **Tailwind/Bootstrap**, capacidades **PWA (Progressive Web App)** con soporte offline, integración nativa de **Inteligencia Artificial Conversacional (Gemini API con Function Calling)** y un **Motor de Generación de Piezas Gráficas y Marketing B2B**.
 
-El desarrollo se estructuró de manera rigurosa a lo largo de **12 etapas consecutivas de ingeniería**, alcanzando una cobertura de calidad del 100% mediante una suite de **443 pruebas de integración, unidad y UI**, cumplimiento de estándares de accesibilidad **WCAG 2.1 Nivel AA**, pipeline automatizado de **CI/CD con GitHub Actions** y un esquema de despliegue continuo en la infraestructura cloud de **Render**.
+El desarrollo se estructuró de manera rigurosa a lo largo de **13 etapas consecutivas de ingeniería**, alcanzando una cobertura de calidad mediante una suite de **485 pruebas de integración, unidad, seguridad RBAC y UI** (481 en verde y 4 xfail documentados), cumplimiento de estándares de accesibilidad **WCAG 2.1 Nivel AA**, cumplimiento de la **Ley 25.326 de Protección de Datos Personales (Argentina)**, pipeline automatizado de **CI/CD con GitHub Actions** y un esquema de despliegue continuo en la infraestructura cloud de **Render PaaS**.
 
 ---
 
 ## 2. Pila Tecnológica Consolidada (Tech Stack)
 
-* **Lenguaje & Framework Core:** Python 3.11 / 3.12, FastAPI, Uvicorn, Pydantic v2.
-* **Persistencia & Multitenancy:** SQLAlchemy 2.0, PostgreSQL (Neon Cloud) y SQLite (desarrollo local), Alembic (migraciones de base de datos).
-* **Seguridad & Autenticación:** OAuth2 con tokens JWT (módulo interno/staff), sesión basada en cookies/teléfono (Portal Cliente) y hashing con `bcrypt`.
+* **Lenguaje & Framework Core:** Python 3.11 / 3.12, FastAPI (Patrón *lifespan* `asynccontextmanager`), Uvicorn, Pydantic v2 / Pydantic-Settings (`@model_validator` Fail-Fast).
+* **Persistencia & Multitenancy:** SQLAlchemy 2.0, PostgreSQL (Neon Cloud) y SQLite (desarrollo local), Alembic (migraciones de base de datos hasta la versión `0009_piezas_generadas`).
+* **Seguridad & Autenticación:** OAuth2 con tokens JWT (módulo interno/staff), sesión basada en cookies/teléfono (Portal Cliente), hashing con `bcrypt`, matriz RBAC de 4 niveles (`SuperAdmin`, `Admin`, `Empleado`, `Cliente`) y verificación estricta de tenant (`_verificar_tenant`).
 * **Frontend & Interfaz PWA:** Jinja2, HTML5 accesible, CSS Custom Properties (Skins dinámicos), JavaScript Vanilla asíncrono (IIFE/ServipetMarketing) y Service Workers (`servipet-v7`) para PWA.
 * **Procesamiento de Imágenes & Documentos:** Pillow (diseño vectorial/raster de placas 1:1 y 9:16), fpdf2 (generación de carteles A4), ReportLab (reportes administrativos PDF) y OpenPyXL (exportación de planillas Excel).
 * **Inteligencia Artificial:** SDK Oficial `google-genai` (Modelo `gemini-2.5-flash`) con arquitectura de *Function Calling / Tools* y fallbacks defensivos.
 * **Notificaciones & Canales:** Arquitectura abstracta `NotificationProvider` para mensajería WhatsApp y enlaces de compartición directa.
-* **Garantía de Calidad & CI/CD:** Pytest (443 tests integrales), Linters (`ruff`), GitHub Actions (`.github/workflows/ci.yml`) y 2FA TOTP en plataforma.
+* **Garantía de Calidad, Linters & CI/CD:** Pytest (485 tests totales: 481 verdes + 4 xfail), Linters (`ruff` 0 errores), scripts de smoke-test CLI (`verificar_rbac.py`), script de sembrado idempotente (`scripts/seed_alpha.py`), GitHub Actions y 2FA TOTP en plataforma.
 
 ---
 
@@ -100,24 +100,21 @@ El desarrollo se estructuró de manera rigurosa a lo largo de **12 etapas consec
 ### Etapa 12: Módulo Solidario, Fidelización de Cumpleaños y Kit de Marketing B2B (Backend & PWA)
 * **Objetivo:** Módulo de impacto comunitario y marketing multicanal de alto impacto visual reutilizando la información del sistema.
 * **Hitos:**
-  * **Backend & Motores de Renderizado Gráfico (`app/services/pieza_service.py`):**
-    * *Cartel Solidario PDF (A4):* Generación vectorial con `fpdf2` para avisos de mascotas perdidas/adopción con datos de contacto y zona.
-    * *Placa Digital Solidaria (9:16 - 1080x1920 px):* Composición raster con `Pillow` optimizada para Historias de Instagram y Estados de WhatsApp.
-    * *Placa de Cumpleaños (1:1 - 1080x1080 px):* Pieza gráfica con badge festivo, foto de la mascota y beneficio promocional dinámico.
-    * *Kit B2B (1:1 - 1080x1080 px):* Motor de composición publicitaria en tiempo real compatible con la paleta hex (`#RRGGBB`) de cada comercio.
-    * *Lazy Import:* Carga diferida de `Pillow` y `fpdf2` para preservar el tiempo de arranque de FastAPI.
-  * **Persistencia & Idempotencia (Migración `0009_piezas_generadas`):**
-    * Creación de la tabla `piezas_generadas` con la restricción única compuesta `uq_pieza_generada_dedupe` (`comercio_id`, `tipo`, `referencia_tipo`, `referencia_id`, `formato`, `anio`) para prevenir duplicados o spam.
-    * Parámetro `forzar=1` para re-emisión explícita bajo autorización del usuario.
-    * Extensión de `Comercio` con toggles de opt-in `habilitar_modulo_solidario` y `habilitar_cumpleanos`.
-  * **Interfaz de Usuario & PWA (`app/static/js/marketing_ui.js`):**
-    * Módulo IIFE global `window.ServipetMarketing` para desacoplamiento y descarga transparente de Blobs (`descargarPieza()`).
-    * Widget de *Próximos Cumpleaños* en el Dashboard (`/page/dashboard`) con validación de sensibilidad/control humano (verificación de mascota activa) y badges "Ya enviado".
-    * Integración de emisión de afiches en Moderación Comunitaria (`/admin/comunidad`) con gestión inteligente de respuestas `409 Conflict`.
-    * Vista dedicada Kit de Marketing B2B (`/page/marketing`) con previsualizador en vivo para el rol `ADMIN`.
-    * Actualización del Service Worker a **`servipet-v7`** con precaché de assets de marketing.
-  * **Corrección de Bugs & Calidad:** Normalización diacrítica + descomposición ASCII en cabeceras `Content-Disposition` para evitar `UnicodeDecodeError`; reemplazo de clases de color hardcodeadas (`bg-indigo-600`) por variables CSS (`var(--color-primario)`) para mantener conformidad WCAG 2.1 AA; y refactorización de handlers de eventos para evitar acumulación de listeners en la PWA.  
-* **Cobertura de Pruebas Final:** **443/443 tests integrales pasados (100% verde — +130 tests creados)**.
+  * **Backend & Motores de Renderizado Gráfico (`app/services/pieza_service.py`):** Cartel Solidario PDF (A4), Placa Digital Solidaria (9:16), Placa de Cumpleaños (1:1) y Kit B2B (1:1) con carga perezosa (*lazy import*) de `Pillow` y `fpdf2`.
+  * **Persistencia & Idempotencia (Migración `0009_piezas_generadas`):** Restricción única compuesta `uq_pieza_generada_dedupe` con flag `forzar=1`.
+  * **Interfaz de Usuario & PWA (`app/static/js/marketing_ui.js`):** Módulo IIFE global `window.ServipetMarketing`, widget de cumpleaños en Dashboard, kit B2B en `/page/marketing` y Service Worker actualizado a `servipet-v7`.
+  * **Corrección de Bugs & Calidad:** Normalización ASCII en `Content-Disposition`, eliminación de clases hardcodeadas por variables CSS `var(--color-primario)` para accesibilidad WCAG 2.1 AA.  
+* **Cobertura de Pruebas:** 443/443 tests pasados.
+
+### Etapa 13: Despliegue en Producción, Hardening RBAC & Pruebas Alpha v1.0
+* **Objetivo:** Blindaje de seguridad en endpoints, modernización de arquitectura FastAPI, sincronización remota de producción (Render + Neon) y suite de verificación Alpha.
+* **Hitos:**
+  * **Eliminación de Endpoints Inseguros:** Remoción total de `/crear-superadmin-temp` y del router completo `seed.py` para prevenir vulnerabilidades de elevación de privilegios en producción.
+  * **Blindaje Multi-Tenant & RBAC (Ley 25.326):** Aplicación de `require_superadmin` en acciones globales, restricción estricta de `require_roles("ADMIN", "EMPLEADO")` con validación de tenant (`_verificar_tenant`) en `/comercios` y `/clientes`, y eliminación de la parametrización libre de `comercio_id` (forzando derivación directa desde el token JWT).
+  * **Guarda Fail-Fast & Lifespan:** Decorador `@model_validator` en `app/config.py` que impide el arranque si `SECRET_KEY` conserva valores por defecto o `CORS_ORIGINS` está vacío. Migración del ciclo de vida de FastAPI a `lifespan` (`asynccontextmanager`).
+  * **Sembrado Idempotente (`scripts/seed_alpha.py`):** Script CLI que lee credenciales exclusivamente desde variables de entorno (`ADMIN_EMAIL`, `ALPHA_ADMIN_EMAIL`, etc.), evita la duplicación de contraseñas con el patrón `_buscar_o_crear` y absorbe datasets de prueba tras el flag `SEED_ALPHA_DEMO=1`.
+  * **Doble Matriz de Verificación & CI/CD:** Script `scripts/verificar_rbac.py` para smoke-tests en tiempo de despliegue y suite dedicada `tests/test_rbac_matrix.py`.  
+* **Cobertura de Pruebas Final:** **485 tests totales (481 verdes + 4 xfail documentados para v1.1 — 0 errores en Ruff)**.
 
 ---
 
@@ -132,12 +129,18 @@ servipet/
 │   └── versions/                      # Migraciones de BD (0001 a 0009_piezas_generadas)
 ├── app/
 │   ├── core/                          # Configuración, JWT, Hashing y Seguridad RBAC
+│   ├── dependencies/                  # Guardas Auth, RBAC y Validación de Tenant (_verificar_tenant)
 │   ├── models/                        # Entidades SQLAlchemy (Comercio, Turno, Producto, PiezaGenerada, etc.)
-│   ├── schemas/                       # Validación de contratos Pydantic v2
+│   ├── schemas/                       # Validación de contratos Pydantic v2 y Config Fail-Fast
 │   ├── services/                      # Lógica de Negocio, Piezas Gráficas (Pillow/fpdf2), AI Gemini y Notificaciones
 │   ├── routers/                       # Controladores REST API (POS, Marketing, Chat, Reportes, Admin, Client)
 │   ├── static/                        # Service Worker (v7), JS IIFE (marketing_ui.js), Fuentes OpenDyslexic, Skins
 │   └── templates/                     # Vistas Jinja2 (Dashboard, Kit Marketing, Comunidad, Base, Legal)
-├── tests/                             # Suite de 443 pruebas automáticas (Pytest / Backend & UI)
-├── iniciar_servipet.bat                # Script de arranque rápido idempotente
-└── requirements.txt                   # Insumos de dependencias de producción (Pillow, fpdf2, reportlab, etc.)
+├── scripts/
+│   ├── seed_alpha.py                  # Sembrado idempotente de datos Alpha (sin credenciales hardcodeadas)
+│   └── verificar_rbac.py              # CLI Smoke-Test de verificación RBAC en tiempo de deploy
+├── tests/                             # Suite de 485 pruebas automáticas (Pytest / Backend, UI & Matriz RBAC)
+├── render.yaml                        # Configuración de despliegue automatizado en Render PaaS
+├── DEPLOYMENT.md                      # Manual técnico de despliegue en producción
+├── iniciar_servipet.bat                # Script de arranque rápido local idempotente
+└── requirements.txt                   # Insumos de dependencias fijadas de producción

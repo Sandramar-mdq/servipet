@@ -15,9 +15,14 @@ from app.models.comercio import Comercio
 from tests.conftest import TestingSessionLocal
 
 
-def _crear_comercio(client, **overrides):
+def _crear_comercio(client, headers, **overrides):
+    """Crea un comercio por la API de plataforma.
+
+    Desde la Iteracion 3 `POST /comercios/` exige `require_superadmin`, asi que
+    las cabeceras son las del SuperAdmin (`rol="ADMIN"`, `comercio_id=None`).
+    """
     payload = {"nombre": "Comercio Skin", **overrides}
-    return client.post("/comercios/", json=payload)
+    return client.post("/comercios/", json=payload, headers=headers)
 
 
 @pytest.fixture(autouse=True)
@@ -44,8 +49,8 @@ def _seed_comercio_skin(db, **overrides):
 
 
 class TestDefaultsSkin:
-    def test_defaults_al_crear_comercio_via_api(self, client):
-        resp = _crear_comercio(client)
+    def test_defaults_al_crear_comercio_via_api(self, client, superadmin_headers):
+        resp = _crear_comercio(client, superadmin_headers)
         assert resp.status_code == 201, resp.text
         data = resp.json()
         assert data["tema_preset"] == PRESET_DEFAULT
@@ -74,33 +79,39 @@ class TestDefaultsSkin:
 class TestValidacionColoresHex:
     @pytest.mark.parametrize("campo", ["color_primario", "color_secundario"])
     @pytest.mark.parametrize("color", ["blue", "#12345", "#1234567", "#GGGGGG", "1E40AF", "", "#abc"])
-    def test_hex_invalido_rechazado_en_create(self, client, campo, color):
-        resp = _crear_comercio(client, **{campo: color})
+    def test_hex_invalido_rechazado_en_create(self, client, superadmin_headers, campo, color):
+        resp = _crear_comercio(client, superadmin_headers, **{campo: color})
         assert resp.status_code == 422
 
     @pytest.mark.parametrize("campo", ["color_primario", "color_secundario"])
-    def test_hex_invalido_rechazado_en_update(self, client, campo):
-        resp = _crear_comercio(client)
+    def test_hex_invalido_rechazado_en_update(self, client, superadmin_headers, campo):
+        resp = _crear_comercio(client, superadmin_headers)
         comercio_id = resp.json()["id"]
-        resp = client.put(f"/comercios/{comercio_id}", json={campo: "rojo"})
+        resp = client.put(
+            f"/comercios/{comercio_id}", json={campo: "rojo"}, headers=superadmin_headers
+        )
         assert resp.status_code == 422
 
-    def test_hex_valido_aceptado_y_persistido(self, client):
+    def test_hex_valido_aceptado_y_persistido(self, client, superadmin_headers):
         resp = _crear_comercio(
-            client, tema_preset="menta_vet", color_primario="#059669", color_secundario="#10B981"
+            client,
+            superadmin_headers,
+            tema_preset="menta_vet",
+            color_primario="#059669",
+            color_secundario="#10B981",
         )
         assert resp.status_code == 201, resp.text
         comercio_id = resp.json()["id"]
 
-        resp = client.get(f"/comercios/{comercio_id}")
+        resp = client.get(f"/comercios/{comercio_id}", headers=superadmin_headers)
         assert resp.status_code == 200
         data = resp.json()
         assert data["tema_preset"] == "menta_vet"
         assert data["color_primario"] == "#059669"
         assert data["color_secundario"] == "#10B981"
 
-    def test_update_colores_validos_persisten(self, client):
-        comercio_id = _crear_comercio(client).json()["id"]
+    def test_update_colores_validos_persisten(self, client, superadmin_headers):
+        comercio_id = _crear_comercio(client, superadmin_headers).json()["id"]
         resp = client.put(
             f"/comercios/{comercio_id}",
             json={
@@ -110,6 +121,7 @@ class TestValidacionColoresHex:
                 "a11y_modo": "normal",
                 "a11y_dyslexic": True,
             },
+            headers=superadmin_headers,
         )
         assert resp.status_code == 200, resp.text
         data = resp.json()
@@ -120,18 +132,24 @@ class TestValidacionColoresHex:
 
 
 class TestValidacionPreset:
-    def test_preset_desconocido_rechazado_en_create(self, client):
-        resp = _crear_comercio(client, tema_preset="neon_party")
+    def test_preset_desconocido_rechazado_en_create(self, client, superadmin_headers):
+        resp = _crear_comercio(client, superadmin_headers, tema_preset="neon_party")
         assert resp.status_code == 422
 
-    def test_preset_desconocido_rechazado_en_update(self, client):
-        comercio_id = _crear_comercio(client).json()["id"]
-        resp = client.put(f"/comercios/{comercio_id}", json={"tema_preset": "no_existe"})
+    def test_preset_desconocido_rechazado_en_update(self, client, superadmin_headers):
+        comercio_id = _crear_comercio(client, superadmin_headers).json()["id"]
+        resp = client.put(
+            f"/comercios/{comercio_id}",
+            json={"tema_preset": "no_existe"},
+            headers=superadmin_headers,
+        )
         assert resp.status_code == 422
 
-    def test_todos_los_presets_del_catalogo_son_aceptados(self, client):
+    def test_todos_los_presets_del_catalogo_son_aceptados(self, client, superadmin_headers):
         for nombre in SKINS_PRESETS:
-            resp = _crear_comercio(client, nombre=f"C {nombre}", tema_preset=nombre)
+            resp = _crear_comercio(
+                client, superadmin_headers, nombre=f"C {nombre}", tema_preset=nombre
+            )
             assert resp.status_code == 201, f"Fallo preset {nombre}: {resp.text}"
             assert resp.json()["tema_preset"] == nombre
 

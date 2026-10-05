@@ -1,15 +1,21 @@
-fastapi
-uvicorn[standard]
-sqlalchemy
-pydantic-settings
+# Runtime de produccion (Render / Neon). Pinned >=, < sobre las versiones
+# verificadas en verde: fastapi 0.115.6, uvicorn 0.34.0, sqlalchemy 2.0.51,
+# alembic 1.19.1, psycopg2-binary 2.9.12, pydantic-settings 2.14.2.
+# NO pinnear starlette ni pydantic por separado: los arrastra fastapi y
+# pydantic-settings respectivamente y fijarlos a mano rompe la resolucion.
+# sqlalchemy queda bajo 2.1 porque los modelos usan Mapped/mapped_column.
+fastapi>=0.115.6,<0.116.0
+uvicorn[standard]>=0.34.0,<0.35.0
+sqlalchemy>=2.0.51,<2.1.0
+alembic>=1.19.1,<2.0.0
+psycopg2-binary>=2.9.12,<3.0.0
+pydantic-settings>=2.14.2,<3.0.0
 python-dotenv
 jinja2
 python-multipart
-psycopg2-binary
 bcrypt
 PyJWT
 cloudinary
-alembic
 pytest
 httpx
 google-genai

@@ -90,13 +90,20 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 4. Configurar variables de entorno (opcional)
+### 4. Configurar variables de entorno
 
 ```bash
 copy .env.example .env
 ```
 
 Por defecto usa SQLite local (`servipet.db`), no se requiere configuración adicional.
+
+> **Con `DEBUG=false` la aplicación se niega a arrancar si falta `SECRET_KEY` o
+> `CORS_ORIGINS`.** Es intencional: impide desplegar en producción firmando JWT con
+> la clave de desarrollo, que es pública en el repo. Para desarrollo local,
+> `DEBUG=true` alcanza y no hace falta tocar ninguna otra variable.
+
+Las variables de producción y el flujo de despliegue están en `DEPLOYMENT.md`.
 
 ---
 

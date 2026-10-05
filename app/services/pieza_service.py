@@ -28,7 +28,6 @@ Decisiones tecnicas relevantes:
    la libreria.
 """
 
-from datetime import date
 from typing import Any
 
 # Leyenda institucional commun a las piezas solidarias. El emoji huella se
@@ -353,7 +352,6 @@ def pdf_cartel_solidario(data: dict) -> bytes:
     if foto is not None:
         import io
 
-        from PIL import Image
 
         recortada = _encajar(foto, 720, 720)
         buf = io.BytesIO()
@@ -528,7 +526,6 @@ def png_placa_vertical(data: dict) -> bytes:
 
     # --- Datos clave ---
     y = y_foto + lado + 70
-    f_dato = _fuente(42, bold=True)
     f_dato_valor = _fuente(40)
     filas = [
         ("Raza / Color", data.get("mascota_raza_color")),
@@ -590,10 +587,8 @@ def png_placa_cuadrada(data: dict) -> bytes:
     usar_branding = data.get("usar_branding", True)
     if usar_branding:
         primario = _hex_a_rgb(data.get("color_primario"), COLOR_PRIMARIO_DEFAULT)
-        secundario = _hex_a_rgb(data.get("color_secundario"), COLOR_SECUNDARIO_DEFAULT)
     else:
         primario = _hex_a_rgb(None, COLOR_PRIMARIO_DEFAULT)
-        secundario = _hex_a_rgb(None, COLOR_SECUNDARIO_DEFAULT)
     texto_sobre_primario = _contraste(primario)
     texto_oscuro = (25, 25, 35)
 

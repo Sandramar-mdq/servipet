@@ -5,7 +5,6 @@ validacion de la descarga binaria y la auditoria anti-duplicado.
 """
 
 import io
-from datetime import date
 
 import pytest
 from PIL import Image

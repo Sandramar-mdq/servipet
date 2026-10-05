@@ -1,11 +1,25 @@
+from pydantic import model_validator
 from pydantic_settings import BaseSettings
+
+# Clave de firma JWT del repo. Sirve unicamente para desarrollo local con
+# DEBUG=true; con DEBUG=false la app se niega a arrancar si la detecta
+# (ver `_validar_configuracion`).
+SECRET_KEY_DEV = "dev-secret-cambiar-en-produccion"
 
 
 class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///./servipet.db"
     APP_NAME: str = "Servipet"
     DEBUG: bool = False
-    SECRET_KEY: str = "dev-secret-cambiar-en-produccion"
+    SECRET_KEY: str = SECRET_KEY_DEV
+
+    # Origenes CORS permitidos, separados por coma. Vacio es valido solo con
+    # DEBUG=true: el front (Jinja + JS vanilla) se sirve desde la misma app, asi
+    # que no hay peticiones cross-origin y no hace falta declarar nada. Con
+    # DEBUG=false la app se niega a arrancar si queda vacio, para no exponer
+    # accidentalmente un `allow_origins=["*"]` en produccion.
+    CORS_ORIGINS: str = ""
+
     NOTIFICATION_PROVIDER: str = "log"
     TWILIO_ACCOUNT_SID: str | None = None
     TWILIO_AUTH_TOKEN: str | None = None
@@ -35,6 +49,45 @@ class Settings(BaseSettings):
     SERVIPET_FUENTE_PATH: str | None = None
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
+
+    @property
+    def cors_origins(self) -> list[str]:
+        """Lista de origenes CORS efectiva.
+
+        Con DEBUG=true devuelve ["*"] para no frenar el desarrollo local. Con
+        DEBUG=false devuelve solo lo declarado en CORS_ORIGINS.
+        """
+        if self.DEBUG:
+            return ["*"]
+        return [o.strip() for o in self.CORS_ORIGINS.split(",") if o.strip()]
+
+    @model_validator(mode="after")
+    def _validar_configuracion(self) -> "Settings":
+        """Impide arrancar en produccion con configuracion insegura.
+
+        Levanta ValidationError al construir Settings (app/config.py es un
+        singleton a nivel de modulo), o sea antes de que uvicorn abra el
+        socket. Falla fuerte y temprano en lugar de emitir JWT firmados con una
+        clave publica del repo.
+        """
+        if self.DEBUG:
+            return self
+
+        if self.SECRET_KEY == SECRET_KEY_DEV:
+            raise ValueError(
+                "SECRET_KEY no puede ser el valor de desarrollo "
+                f"({SECRET_KEY_DEV}) cuando DEBUG=false. Generar una con: "
+                'python -c "import secrets; print(secrets.token_hex(32))"'
+            )
+
+        if not self.CORS_ORIGINS.strip():
+            raise ValueError(
+                "CORS_ORIGINS no puede quedar vacio cuando DEBUG=false. "
+                "Declarar los origenes separados por coma (por ejemplo "
+                "https://servipet.onrender.com) o usar DEBUG=true en desarrollo."
+            )
+
+        return self
 
 
 settings = Settings()
