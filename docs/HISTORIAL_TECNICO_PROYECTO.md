@@ -94,7 +94,7 @@ El desarrollo se estructuró de manera rigurosa a lo largo de **13 etapas consec
 * **Hitos:** 
   * **Matriz RBAC de 4 niveles:** definición y validación estricta de accesos entre `SuperAdmin` (ADMIN global sin comercio), `Admin` del comercio, `Operador/Empleado` y `Cliente`.
   * **Marco legal Beta (`/legal/terminos-beta`):** plantilla *standalone* pública (`app/templates/legal/terminos_beta.html`) con los Términos del Servicio y Exención de Responsabilidad bajo la Ley 25.326.
-  * **Consentimiento explícito (migración `0007_comercio_consentimiento_terminos`):** auditoría de consentimiento con fecha/hora UTC (`acepta_terminos_beta`, `terminos_aceptados_at`).  
+  * **Consentimiento explícito (migración `0007_consentimiento_terminos`):** auditoría de consentimiento con fecha/hora UTC (`acepta_terminos_beta`, `terminos_aceptados_at`).  
 * **Cobertura de Pruebas:** 313/313 tests pasados.
 
 ### Etapa 12: Módulo Solidario, Fidelización de Cumpleaños y Kit de Marketing B2B (Backend & PWA)

@@ -1,5 +1,5 @@
 from pydantic import model_validator
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Clave de firma JWT del repo. Sirve unicamente para desarrollo local con
 # DEBUG=true; con DEBUG=false la app se niega a arrancar si la detecta
@@ -48,7 +48,15 @@ class Settings(BaseSettings):
     # ImageFont.load_default(size=...).
     SERVIPET_FUENTE_PATH: str | None = None
 
-    model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
+    # extra="ignore": tolera claves ajenas a Settings en .env (ADMIN_*,
+    # ALPHA_* son leidas por scripts/seed_alpha.py via os.environ, no por
+    # pydantic-settings). Sin esto, pydantic-settings >= 2.14 levanta
+    # ValidationError(extra_forbidden) con un .env que incluya esas claves.
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
 
     @property
     def cors_origins(self) -> list[str]:

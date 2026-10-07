@@ -31,6 +31,7 @@ jobs:
     env:
       DATABASE_URL: sqlite:///./servipet.db
       SECRET_KEY: ci-secret-key-solo-para-tests
+      CORS_ORIGINS: http://localhost
       NOTIFICATION_PROVIDER: log
       DEBUG: "false"
 

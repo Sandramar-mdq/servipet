@@ -9,7 +9,7 @@ Migracion defensiva: segura sobre BDs existentes creadas con create_all
 (crea la tabla solo si falta) y compatible con SQLite (batch).
 
 Revision ID: 0009_piezas_generadas
-Revises: 0008_solidaridad_cumpleanos_campos
+Revises: 0008_solidaridad_cumpleanos
 Create Date: 2026-09-28
 """
 
@@ -20,7 +20,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "0009_piezas_generadas"
-down_revision: Union[str, None] = "0008_solidaridad_cumpleanos_campos"
+down_revision: Union[str, None] = "0008_solidaridad_cumpleanos"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

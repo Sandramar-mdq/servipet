@@ -15,8 +15,8 @@ Campos para los modulos de Marketing B2B de la Etapa 12:
 Migracion defensiva: segura sobre BDs existentes creadas con create_all
 (agrega las columnas solo si faltan) y compatible con SQLite (batch).
 
-Revision ID: 0008_solidaridad_cumpleanos_campos
-Revises: 0007_comercio_consentimiento_terminos
+Revision ID: 0008_solidaridad_cumpleanos
+Revises: 0007_consentimiento_terminos
 Create Date: 2026-09-28
 """
 
@@ -26,8 +26,12 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "0008_solidaridad_cumpleanos_campos"
-down_revision: Union[str, None] = "0007_comercio_consentimiento_terminos"
+# Ojo con el largo: alembic_version.version_num es VARCHAR(32) (limite duro en
+# alembic/ddl/impl.py). Postgres trunca y revienta la migracion; SQLite no lo
+# valida, asi que el error solo aparece contra Neon. tests/test_migrations.py
+# falla si un id vuelve a pasarse.
+revision: str = "0008_solidaridad_cumpleanos"
+down_revision: Union[str, None] = "0007_consentimiento_terminos"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

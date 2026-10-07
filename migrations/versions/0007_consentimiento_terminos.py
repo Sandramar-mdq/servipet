@@ -8,7 +8,7 @@ Campos de auditoria del consentimiento de la version Beta (Tarea 11.2.2):
 Migracion defensiva: segura sobre BDs existentes creadas con create_all
 (agrega las columnas solo si faltan) y compatible con SQLite (batch).
 
-Revision ID: 0007_comercio_consentimiento_terminos
+Revision ID: 0007_consentimiento_terminos
 Revises: 0006_comercio_plan_estado_fecha
 Create Date: 2026-09-12
 """
@@ -19,7 +19,11 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "0007_comercio_consentimiento_terminos"
+# Ojo con el largo: alembic_version.version_num es VARCHAR(32) (limite duro en
+# alembic/ddl/impl.py). Postgres trunca y revienta la migracion; SQLite no lo
+# valida, asi que el error solo aparece contra Neon. tests/test_migrations.py
+# falla si un id vuelve a pasarse.
+revision: str = "0007_consentimiento_terminos"
 down_revision: Union[str, None] = "0006_comercio_plan_estado_fecha"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
