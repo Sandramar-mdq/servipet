@@ -235,15 +235,17 @@
     // ------------------------------------------------------------------
 
     /**
-     * PATCH del opt-in de modulos del comercio. Los flags ausentes se envian
-     * como `null` para no pisar el estado del otro modulo.
+     * PATCH del opt-in de modulos del comercio. Solo se envian las claves
+     * presentes en `flags`; las ausentes las ignora el backend (semantica
+     * patch) y no pisan el estado del otro modulo.
      */
     function guardarOptIn(comercioId, flags) {
-        var cuerpo = {
-            habilitar_red_comunitaria: flags.habilitar_red_comunitaria,
-            habilitar_modulo_solidario: flags.habilitar_modulo_solidario === undefined ? null : flags.habilitar_modulo_solidario,
-            habilitar_cumpleanos: flags.habilitar_cumpleanos === undefined ? null : flags.habilitar_cumpleanos
-        };
+        var cuerpo = {};
+        ['habilitar_red_comunitaria', 'habilitar_modulo_solidario', 'habilitar_cumpleanos'].forEach(function (clave) {
+            if (flags[clave] !== undefined) {
+                cuerpo[clave] = flags[clave];
+            }
+        });
 
         return fetch('/comercios/' + comercioId + '/opt-in', {
             method: 'PATCH',

@@ -40,13 +40,13 @@ class ComercioBase(BaseModel):
 class ComercioOptInRequest(BaseModel):
     """Opt-in de modulos del comercio.
 
-    `habilitar_red_comunitaria` sigue siendo obligatorio por compatibilidad con
-    el switch existente. Los modulos de Marketing (solidario y cumpleaños) son
-    opcionales con `None` por defecto: omitirlos deja el flag intacto, de modo
-    que un switch no pisa el estado del otro.
+    Los tres campos tienen semantica patch y quedan en `None` por defecto:
+    omitir un flag deja ese modulo intacto, de modo que un switch no pisa el
+    estado del otro. `habilitar_red_comunitaria` tambien es opcional para que
+    los switches de Marketing puedan enviar solo su flag sin romper con 422.
     """
 
-    habilitar_red_comunitaria: bool
+    habilitar_red_comunitaria: bool | None = None
     habilitar_modulo_solidario: bool | None = None
     habilitar_cumpleanos: bool | None = None
 

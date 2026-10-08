@@ -128,7 +128,7 @@
         fetch(API_BASE + '/admin/' + COMERCIO_ID + '/avisos?' + params.toString())
             .then(function (resp) {
                 if (resp.status === 401) {
-                    window.location.href = '/auth/login';
+                    window.location.href = '/login';
                     return null;
                 }
                 if (!resp.ok) throw new Error('HTTP ' + resp.status);

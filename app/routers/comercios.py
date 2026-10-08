@@ -101,9 +101,9 @@ def configurar_opt_in_red_comunitaria(
 ):
     """Activa/desactiva los modulos del comercio (solo ADMIN del comercio o global).
 
-    `habilitar_red_comunitaria` se aplica siempre (campo obligatorio). Los modulos
-    de Marketing (`habilitar_modulo_solidario`, `habilitar_cumpleanos`) tienen
-    semantica patch: si vienen en `None` el flag existente queda intacto.
+    Los tres flags tienen semantica patch: si vienen en `None` el flag existente
+    queda intacto. Esto permite que la UI encienda un modulo sin pisar el estado
+    de los demas.
     """
     verificar_tenant(current_user, comercio_id)
 
@@ -111,7 +111,8 @@ def configurar_opt_in_red_comunitaria(
     if not comercio:
         raise HTTPException(status_code=404, detail="Comercio no encontrado")
 
-    comercio.habilitar_red_comunitaria = datos.habilitar_red_comunitaria
+    if datos.habilitar_red_comunitaria is not None:
+        comercio.habilitar_red_comunitaria = datos.habilitar_red_comunitaria
     if datos.habilitar_modulo_solidario is not None:
         comercio.habilitar_modulo_solidario = datos.habilitar_modulo_solidario
     if datos.habilitar_cumpleanos is not None:

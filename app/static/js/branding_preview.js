@@ -167,6 +167,19 @@
         });
     });
 
+    // El `<input type=color>` es el unico que lleva `name` y por lo tanto el
+    // unico valor que viaja en el POST. Si el usuario edita el hex a mano sin
+    // disparar el picker, sincronizamos en submit para no guardar el color
+    // viejo cuando el hex visible es valido.
+    form.addEventListener('submit', function () {
+        if (hexPrimario && pickerPrimario && hexValido(hexPrimario.value.trim())) {
+            pickerPrimario.value = hexPrimario.value.trim().toLowerCase();
+        }
+        if (hexSecundario && pickerSecundario && hexValido(hexSecundario.value.trim())) {
+            pickerSecundario.value = hexSecundario.value.trim().toLowerCase();
+        }
+    });
+
     if (selectModo && panelPreview) {
         var refrescarModo = function () {
             panelPreview.dataset.a11yModo = selectModo.value;

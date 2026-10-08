@@ -625,13 +625,18 @@ def png_placa_cuadrada(data: dict) -> bytes:
         x_foto = (lado - lado_foto) // 2
         foto = _webp_base64_a_png(data.get("foto_webp"))
         recortada = _encajar(foto, lado_foto, lado_foto)
-        # Redondeo de esquinas del recorte de foto.
-        mask = Image.new("L", (lado_foto, lado_foto), 0)
-        from PIL import ImageDraw as _ID
+        if recortada is not None:
+            # Redondeo de esquinas del recorte de foto.
+            mask = Image.new("L", (lado_foto, lado_foto), 0)
+            from PIL import ImageDraw as _ID
 
-        _ID.Draw(mask).rounded_rectangle([0, 0, lado_foto, lado_foto], radius=32, fill=255)
-        lienzo.paste(recortada, (x_foto, y_cuerpo), mask)
-        y_texto = y_cuerpo + lado_foto + 30
+            _ID.Draw(mask).rounded_rectangle([0, 0, lado_foto, lado_foto], radius=32, fill=255)
+            lienzo.paste(recortada, (x_foto, y_cuerpo), mask)
+            y_texto = y_cuerpo + lado_foto + 30
+        else:
+            # Foto corrupta o no decodificable: se omite el recorte y el
+            # texto arranca en la zona central (nunca `paste(None)`).
+            y_texto = y_cuerpo
     else:
         y_texto = y_cuerpo
 

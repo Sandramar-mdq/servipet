@@ -88,7 +88,7 @@ app.add_middleware(
     # Sin allow_credentials: el login deja cookie access_token pero combinarla
     # con allow_origins=["*"] es una combinacion invalida en Starlette. El Bearer
     # por header sigue funcionando y la cookie no viaja cross-origin.
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type"],
 )
 

@@ -382,20 +382,43 @@ def generar_placa_promocion(
         raise HTTPException(status_code=403, detail="Permisos insuficientes")
 
     data = marketing_service.datos_promocion(datos.model_dump(), comercio)
-    contenido = pieza_service.png_placa_cuadrada(data)
+    try:
+        contenido = pieza_service.png_placa_cuadrada(data)
+    except ImportError as exc:
+        # Pillow/fpdf se importan dentro del renderer (import perezoso a
+        # proposito): si faltan en el servidor la app arranca igual, pero la
+        # generacion de imagen no puede correr. Devolvemos JSON claro, no 500.
+        logger.exception("Falta dependencia de imagen para la placa 1:1")
+        raise HTTPException(
+            status_code=503,
+            detail="Generador de imagen no disponible: falta Pillow en el servidor.",
+        ) from exc
+    except Exception as exc:
+        logger.exception("Error generando la placa 1:1")
+        raise HTTPException(
+            status_code=500,
+            detail="No se pudo generar la placa. Intenta de nuevo en unos minutos.",
+        ) from exc
+
     nombre = marketing_service.nombre_archivo_promocion(datos.titulo)
 
     if datos.registrar and comercio is not None:
-        marketing_service.registrar_pieza(
-            db,
-            comercio_id=comercio.id,
-            tipo=TipoPieza.PROMOCION,
-            formato=FormatoPieza.PNG_1X1,
-            referencia_tipo=None,
-            referencia_id=None,
-            anio=None,
-            nombre_archivo=nombre,
-            beneficio=data.get("beneficio") or None,
-            usuario_id=user.id,
-        )
+        # La auditoria es best-effort: si falla la BD (p.ej. Neon caido) igual
+        # entregamos la placa ya generada en vez de cortar con un 500.
+        try:
+            marketing_service.registrar_pieza(
+                db,
+                comercio_id=comercio.id,
+                tipo=TipoPieza.PROMOCION,
+                formato=FormatoPieza.PNG_1X1,
+                referencia_tipo=None,
+                referencia_id=None,
+                anio=None,
+                nombre_archivo=nombre,
+                beneficio=data.get("beneficio") or None,
+                usuario_id=user.id,
+            )
+        except Exception:
+            logger.exception("No se pudo registrar la pieza generada (auditoria)")
+            db.rollback()
     return descarga_archivo(contenido, PNG_MT, nombre)
