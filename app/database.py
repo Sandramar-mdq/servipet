@@ -35,7 +35,15 @@ if database_url.startswith("libsql://"):
 elif database_url.startswith("sqlite"):
     connect_args["check_same_thread"] = False
 
-engine = create_engine(database_url, connect_args=connect_args)
+engine = create_engine(
+    database_url,
+    connect_args=connect_args,
+    # Neon/Postgres en la nube cierra conexiones idle por timeout; pre_ping
+    # verifica la conexion antes de reutilizarla y pool_recycle las recicla
+    # antes de que el SSL del servidor las corte de sorpresa.
+    pool_pre_ping=True,
+    pool_recycle=300,
+)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
