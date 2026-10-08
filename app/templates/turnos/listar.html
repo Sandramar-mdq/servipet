@@ -3,14 +3,20 @@
 
 {% set badge_clases = {
     'Pendiente': 'bg-amber-100 text-amber-700',
+    'PENDIENTE': 'bg-amber-100 text-amber-700',
     'Confirmado': 'bg-emerald-100 text-emerald-700',
+    'CONFIRMADO': 'bg-emerald-100 text-emerald-700',
     'Cancelado': 'bg-red-100 text-red-700',
-    'Finalizado': 'bg-blue-100 text-blue-700'
+    'CANCELADO': 'bg-red-100 text-red-700',
+    'CANCELADO_TARDIO': 'bg-red-100 text-red-700',
+    'Finalizado': 'bg-blue-100 text-blue-700',
+    'FINALIZADO': 'bg-blue-100 text-blue-700'
 } %}
 
 {% block content %}
 <div class="flex items-center justify-between mb-6">
     <h1 class="text-2xl font-bold text-gray-800">Agenda de Turnos</h1>
+    <button id="btn-nuevo-turno" type="button" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition">+ Nuevo Turno</button>
 </div>
 
 <!-- Filtros -->
@@ -68,17 +74,17 @@
                         <span class="inline-block text-xs font-bold px-2.5 py-1 rounded-full {{ badge_clases.get(t.estado, 'bg-gray-100 text-gray-600') }}">{{ t.estado }}</span>
                     </td>
                     <td class="px-4 py-3 text-sm text-right whitespace-nowrap">
-                        {% if t.estado == 'Pendiente' %}
+                        {% if t.estado in ['Pendiente', 'PENDIENTE'] %}
                         <form method="post" action="/page/turnos/{{ t.id }}/cambiar-estado" class="inline">
-                            <input type="hidden" name="estado" value="Confirmado">
+                            <input type="hidden" name="estado" value="CONFIRMADO">
                             <input type="hidden" name="fecha" value="{{ fecha_seleccionada }}">
                             <input type="hidden" name="estado_filtro" value="{{ estado_seleccionado }}">
                             <button type="submit" class="text-emerald-600 hover:underline font-medium mr-3">Confirmar</button>
                         </form>
                         {% endif %}
-                        {% if t.estado in ['Pendiente', 'Confirmado'] %}
+                        {% if t.estado in ['Pendiente', 'PENDIENTE', 'Confirmado', 'CONFIRMADO'] %}
                         <form method="post" action="/page/turnos/{{ t.id }}/cambiar-estado" class="inline" onsubmit="return confirm('Cancelar el turno de {{ t.cliente.nombre }}?')">
-                            <input type="hidden" name="estado" value="Cancelado">
+                            <input type="hidden" name="estado" value="CANCELADO">
                             <input type="hidden" name="fecha" value="{{ fecha_seleccionada }}">
                             <input type="hidden" name="estado_filtro" value="{{ estado_seleccionado }}">
                             <button type="submit" class="text-red-600 hover:underline mr-3">Cancelar</button>
@@ -95,7 +101,7 @@
                             data-monto="{{ '%.2f' | format(t.servicio.precio_base) }}"
                             data-obs="{{ t.observaciones or '' }}"
                             onclick="abrirModal(this)">Completar</button>
-                        {% elif t.estado == 'Finalizado' %}
+                        {% elif t.estado in ['Finalizado', 'FINALIZADO'] %}
                         <span class="text-xs text-gray-400">—</span>
                         {% endif %}
                     </td>
@@ -151,6 +157,62 @@
         </form>
     </div>
 </div>
+
+<!-- Modal Nuevo Turno -->
+<div id="modal-nuevo-turno" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" data-cerrar-modal="nuevo-turno">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+        <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h3 class="text-base font-bold text-gray-800">+ Nuevo Turno</h3>
+            <button type="button" data-cerrar-modal="nuevo-turno" class="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+        </div>
+        <form method="post" action="/page/turnos/crear" id="form-nuevo-turno" class="p-5 space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Cliente *</label>
+                <select name="cliente_id" id="nt-cliente-id" required class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    <option value="">Seleccione cliente</option>
+                    {% for c in clientes %}
+                    <option value="{{ c.id }}">{{ c.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Mascota *</label>
+                <select name="mascota_id" id="nt-mascota-id" required class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" disabled>
+                    <option value="">Seleccione mascota</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Servicio *</label>
+                <select name="servicio_id" id="nt-servicio-id" required class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    <option value="">Seleccione servicio</option>
+                    {% for s in servicios %}
+                    <option value="{{ s.id }}">{{ s.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Fecha *</label>
+                    <input type="date" name="fecha" id="nt-fecha" value="{{ fecha_seleccionada }}" required class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Hora *</label>
+                    <input type="time" name="hora" id="nt-hora" required class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Observaciones</label>
+                <textarea name="observaciones" id="nt-obs" rows="2" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
+            </div>
+            <input type="hidden" name="fecha_seleccionada" value="{{ fecha_seleccionada }}">
+            <input type="hidden" name="estado_filtro" value="{{ estado_seleccionado }}">
+            <div class="flex gap-3 pt-1">
+                <button type="button" data-cerrar-modal="nuevo-turno" class="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-300 transition">Cancelar</button>
+                <button type="submit" class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition">Crear Turno</button>
+            </div>
+        </form>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -169,5 +231,56 @@ function abrirModal(btn) {
 function cerrarModal() {
     document.getElementById('modal-completar').classList.add('hidden');
 }
+function abrirModalNuevo() {
+    document.getElementById('modal-nuevo-turno').classList.remove('hidden');
+}
+function cerrarModalNuevo() {
+    document.getElementById('modal-nuevo-turno').classList.add('hidden');
+}
+const btnNuevo = document.getElementById('btn-nuevo-turno');
+if (btnNuevo) {
+    btnNuevo.addEventListener('click', abrirModalNuevo);
+}
+document.querySelectorAll('[data-cerrar-modal="nuevo-turno"]').forEach(function (el) {
+    el.addEventListener('click', cerrarModalNuevo);
+});
+document.querySelectorAll('[data-cerrar-modal="completar"]').forEach(function (el) {
+    el.addEventListener('click', cerrarModal);
+});
+const ntCliente = document.getElementById('nt-cliente-id');
+const ntMascota = document.getElementById('nt-mascota-id');
+async function cargarMascotas(clienteId) {
+    ntMascota.innerHTML = '<option value="">Seleccione mascota</option>';
+    if (!clienteId) {
+        ntMascota.disabled = true;
+        return;
+    }
+    try {
+        const resp = await fetch('/mascotas/?cliente_id=' + encodeURIComponent(clienteId));
+        if (resp.ok) {
+            const data = await resp.json();
+            data.forEach(function (m) {
+                const opt = document.createElement('option');
+                opt.value = m.id;
+                opt.textContent = m.nombre + (m.especie ? ' - ' + m.especie : '');
+                ntMascota.appendChild(opt);
+            });
+        }
+        ntMascota.disabled = false;
+    } catch (e) {
+        ntMascota.disabled = false;
+    }
+}
+if (ntCliente) {
+    ntCliente.addEventListener('change', function () {
+        cargarMascotas(ntCliente.value);
+    });
+}
+document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+        cerrarModal();
+        cerrarModalNuevo();
+    }
+});
 </script>
 {% endblock %}

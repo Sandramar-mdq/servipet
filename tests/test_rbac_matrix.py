@@ -1,4 +1,4 @@
-"""Matriz RBAC de 4 niveles y aislamiento multi-tenant (Iteracion 3).
+﻿"""Matriz RBAC de 4 niveles y aislamiento multi-tenant (Iteracion 3).
 
 Cubre lo mismo que `scripts/verificar_rbac.py`, pero contra `TestClient` y con
 la BD en memoria de `tests/conftest.py`, para que CI lo ejecute en cada push.
@@ -41,7 +41,7 @@ def niveles_sembrados():
     db = TestingSessionLocal()
     try:
         # `conftest.admin_user` crea el comercio 1, pero esta fixture no depende
-        # de ella: se siembra acá para que los tests sean autonomos.
+        # de ella: se siembra acÃ¡ para que los tests sean autonomos.
         db.add(Comercio(
             id=1, nombre="Comercio Base", tipo_comercio="PELUQUERIA", activo=True,
             # Los opt-in en True replican COMERCIO_DATA de scripts/seed_alpha.py:
@@ -151,6 +151,8 @@ MATRIZ = [
     ("GET", "/api/v1/marketing/cumpleanos/proximos", {
         ANON: 401, SUPERADMIN: 400, ADMIN_COMERCIO: 200, EMPLEADO: 200, CLIENTE: 403,
     }),
+
+
 
     ("GET", "/portal/me", {
         ANON: 401, ADMIN_COMERCIO: 404, EMPLEADO: 403, CLIENTE: 200,
@@ -351,8 +353,7 @@ def test_diferido_atenciones_sin_guard(client):
     assert resp.status_code == 401
 
 
-@pytest.mark.xfail(strict=False, reason="sin guard: app/routers/admin_turnos.py")
-def test_diferido_turnos_sin_guard(client):
+def test_turnos_requiere_autenticacion(client):
     resp = client.get("/page/turnos")
     assert resp.status_code == 401
 
@@ -361,3 +362,4 @@ def test_diferido_turnos_sin_guard(client):
 def test_diferido_page_reportes_sin_guard(client):
     resp = client.get("/page/reportes")
     assert resp.status_code == 401
+

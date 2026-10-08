@@ -1,4 +1,5 @@
 from datetime import date, datetime, time
+from typing import Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -6,9 +7,15 @@ from sqlalchemy.orm import Session
 
 from app.core.templating import get_templates
 from app.database import get_db
+from app.dependencies.auth import require_roles, verificar_tenant
 from app.models.atencion import AtencionHistorial
+from app.models.cliente import Cliente
+from app.models.mascota import Mascota
+from app.models.servicio import Servicio
 from app.models.turno import Turno
+from app.models.usuario import Usuario
 from app.services import notification_service
+from app.services.turnos import calcular_slots_disponibles
 
 router = APIRouter(prefix="/page", tags=["Admin Turnos"])
 templates = get_templates()
@@ -34,6 +41,7 @@ def agenda_turnos(
     estado: str | None = None,
     fecha: str | None = None,
     db: Session = Depends(get_db),
+    current_user: Usuario = Depends(require_roles("ADMIN", "EMPLEADO")),
 ):
     fecha_seleccionada = _fecha_filtro(fecha)
     fecha_dt = date.fromisoformat(fecha_seleccionada)
@@ -50,6 +58,12 @@ def agenda_turnos(
         estado_seleccionado = estado
     turnos = query.order_by(Turno.fecha_hora.asc()).all()
 
+    clientes_query = db.query(Cliente)
+    if current_user.comercio_id is not None:
+        clientes_query = clientes_query.filter(Cliente.comercio_id == current_user.comercio_id)
+    clientes = clientes_query.order_by(Cliente.nombre.asc()).all()
+    servicios = db.query(Servicio).order_by(Servicio.nombre.asc()).all()
+
     return templates.TemplateResponse("turnos/listar.html", {
         "request": request,
         "turnos": turnos,
@@ -58,6 +72,8 @@ def agenda_turnos(
         "estado_seleccionado": estado_seleccionado,
         "success": request.query_params.get("success"),
         "error": request.query_params.get("error"),
+        "clientes": clientes,
+        "servicios": servicios,
     })
 
 
@@ -69,6 +85,7 @@ def cambiar_estado_turno(
     fecha: str | None = Form(None),
     estado_filtro: str | None = Form(None),
     db: Session = Depends(get_db),
+    current_user: Usuario = Depends(require_roles("ADMIN", "EMPLEADO")),
 ):
     turno = db.query(Turno).filter(Turno.id == turno_id).first()
     if not turno:
@@ -97,6 +114,7 @@ def completar_turno(
     fecha: str | None = Form(None),
     estado_filtro: str | None = Form(None),
     db: Session = Depends(get_db),
+    current_user: Usuario = Depends(require_roles("ADMIN", "EMPLEADO")),
 ):
     turno = db.query(Turno).filter(Turno.id == turno_id).first()
     if not turno:
@@ -135,6 +153,7 @@ def cambiar_fase_turno(
     fecha: str | None = Form(None),
     estado_filtro: str | None = Form(None),
     db: Session = Depends(get_db),
+    current_user: Usuario = Depends(require_roles("ADMIN", "EMPLEADO")),
 ):
     turno = db.query(Turno).filter(Turno.id == turno_id).first()
     if not turno:
@@ -159,3 +178,78 @@ def _query_params(fecha: str | None, estado_filtro: str | None) -> str:
     if estado_filtro and estado_filtro != "todos":
         params.append(f"estado={estado_filtro}")
     return "&".join(params) + ("&" if params else "")
+@router.post("/turnos/crear")
+def crear_turno_staff(
+    background_tasks: BackgroundTasks,
+    cliente_id: int = Form(...),
+    mascota_id: int = Form(...),
+    servicio_id: int = Form(...),
+    fecha: str = Form(...),
+    hora: str = Form(...),
+    observaciones: Optional[str] = Form(None),
+    fecha_seleccionada: str | None = Form(None),
+    estado_filtro: str | None = Form(None),
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(require_roles("ADMIN", "EMPLEADO")),
+):
+    cliente = db.query(Cliente).filter(Cliente.id == cliente_id).first()
+    if not cliente:
+        return RedirectResponse("/page/turnos?error=Cliente inexistente", status_code=303)
+    try:
+        verificar_tenant(current_user, cliente.comercio_id)
+    except Exception:
+        return RedirectResponse("/page/turnos?error=Acceso no autorizado al cliente", status_code=303)
+
+    mascota = db.query(Mascota).filter(Mascota.id == mascota_id).first()
+    if not mascota or mascota.cliente_id != cliente.id:
+        return RedirectResponse("/page/turnos?error=Mascota invalida", status_code=303)
+    if getattr(mascota, "fallecida", False):
+        return RedirectResponse("/page/turnos?error=No se puede agendar turno para mascota fallecida", status_code=303)
+    if getattr(mascota, "activo", True) is False:
+        return RedirectResponse("/page/turnos?error=Mascota inactiva", status_code=303)
+
+    servicio = db.query(Servicio).filter(Servicio.id == servicio_id).first()
+    if not servicio:
+        return RedirectResponse("/page/turnos?error=Servicio inexistente", status_code=303)
+
+    try:
+        fecha_hora = datetime.strptime(f"{fecha} {hora}", "%Y-%m-%d %H:%M")
+    except ValueError:
+        return RedirectResponse("/page/turnos?error=Formato de fecha/hora invalido", status_code=303)
+
+    if fecha_hora < datetime.now():
+        return RedirectResponse("/page/turnos?error=No se puede crear un turno en el pasado", status_code=303)
+
+    comercio_id = cliente.comercio_id
+    try:
+        slots = calcular_slots_disponibles(
+            fecha=fecha_hora.date(),
+            servicio_id=servicio.id,
+            comercio_id=comercio_id,
+        )
+        hora_str = fecha_hora.strftime("%H:%M")
+        if hora_str not in [s["hora"] for s in slots]:
+            return RedirectResponse("/page/turnos?error=Horario no disponible", status_code=303)
+    except Exception:
+        pass
+
+    turno = Turno(
+        cliente_id=cliente.id,
+        mascota_id=mascota.id,
+        servicio_id=servicio.id,
+        fecha_hora=fecha_hora,
+        duracion_minutos=servicio.duracion_minutos or 30,
+        estado="CONFIRMADO",
+        observaciones=observaciones or None,
+    )
+    db.add(turno)
+    db.commit()
+    db.refresh(turno)
+    try:
+        background_tasks.add_task(notification_service.enqueue_cambio_estado, turno.id, "CONFIRMADO")
+    except Exception:
+        pass
+
+    redirect_fecha = fecha_seleccionada or fecha
+    qs = _query_params(redirect_fecha, estado_filtro)
+    return RedirectResponse(f"/page/turnos?{qs}success=Turno creado correctamente", status_code=303)
