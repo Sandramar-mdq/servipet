@@ -13,15 +13,42 @@
                 <h1 class="text-xl font-bold">Servipet</h1>
                 <p class="text-sm text-indigo-200 mt-1">Portal de clientes</p>
             </div>
-            <form method="post" action="/cliente/login" class="p-6 space-y-4">
-                {% if error %}
-                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded text-sm">
-                    {{ error }}
+
+            {% if error %}
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 text-sm">
+                {{ error }}
+            </div>
+            {% endif %}
+
+            <div class="flex border-b border-gray-200">
+                <button type="button" id="tab-password" onclick="cambiarTab('password')"
+                        class="flex-1 px-4 py-3 text-sm font-medium bg-indigo-600 text-white">
+                    Email y contrasena
+                </button>
+                <button type="button" id="tab-telefono" onclick="cambiarTab('telefono')"
+                        class="flex-1 px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-100">
+                    Telefono
+                </button>
+            </div>
+
+            <form id="form-password" method="post" action="/cliente/login" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" name="email" required autofocus class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="tucorreo@ejemplo.com">
                 </div>
-                {% endif %}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Contrasena</label>
+                    <input type="password" name="password" required class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Tu contrasena">
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition text-sm font-medium">
+                    Ingresar
+                </button>
+            </form>
+
+            <form id="form-telefono" method="post" action="/cliente/login" class="p-6 space-y-4 hidden">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Telefono</label>
-                    <input type="tel" name="telefono" required autofocus class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Ej: 1123456789">
+                    <input type="tel" name="telefono" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Ej: 1123456789">
                 </div>
                 <button type="submit" class="w-full bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition text-sm font-medium">
                     Enviar codigo
@@ -29,5 +56,21 @@
             </form>
         </div>
     </div>
+    <script>
+        function cambiarTab(tab) {
+            document.getElementById('form-password').classList.toggle('hidden', tab !== 'password');
+            document.getElementById('form-telefono').classList.toggle('hidden', tab !== 'telefono');
+            var btnP = document.getElementById('tab-password');
+            var btnT = document.getElementById('tab-telefono');
+            var activa = 'bg-indigo-600 text-white';
+            var inactiva = 'text-gray-600 hover:bg-gray-100';
+            btnP.className = 'flex-1 px-4 py-3 text-sm font-medium ' + (tab === 'password' ? activa : inactiva);
+            btnT.className = 'flex-1 px-4 py-3 text-sm font-medium ' + (tab === 'telefono' ? activa : inactiva);
+            if (tab === 'telefono') {
+                document.getElementById('form-telefono').querySelector('input').focus();
+            }
+        }
+        cambiarTab('password');
+    </script>
 </body>
 </html>

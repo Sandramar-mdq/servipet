@@ -30,6 +30,8 @@ hardcodeados: si falta alguna, el script aborta con `SystemExit`.
     ALPHA_EMPLEADO_EMAIL / ALPHA_EMPLEADO_PASSWORD    Empleado
     ALPHA_CLIENTE_EMAIL / ALPHA_CLIENTE_PASSWORD    Cliente
     ALPHA_CLIENTE_NOMBRE                  Nombre del perfil Cliente (opcional)
+    ALPHA_CLIENTE_TELEFONO                Telefono del perfil Cliente (opcional,
+                                         habilita el ingreso por codigo SMS/OTP)
 
 Opcionales:
     SEED_ALPHA_DEMO=1    ademas siembra servicios, clientes, mascotas y turnos
@@ -142,18 +144,70 @@ CLIENTES_DATA = [
         "email": "lucia.gomez@example.com",
         "notas": "Gato con problemas de piel, requiere cuidado especial",
         "mascotas": [
-            {"nombre": "Mishi", "especie": "Gato", "raza": "Persa", "peso": 5.0, "sexo": "Hembra"},
+            {"nombre": "Mishi", "especie": "Gato", "raza": "Persa", "peso": 5.0,
+             "sexo": "Hembra", "fecha_nacimiento": date(2022, 4, 18)},
+        ],
+    },
+    {
+        "nombre": "Maria Lopez",
+        "telefono": "1122334455",
+        "email": "maria.lopez@example.com",
+        "notas": "Perro ansioso en la peluqueria, pide turno temprano",
+        "mascotas": [
+            {"nombre": "Rocky", "especie": "Perro", "raza": "Labrador", "peso": 25.0,
+             "sexo": "Macho", "fecha_nacimiento": date(2023, 5, 10)},
+            {"nombre": "Simba", "especie": "Gato", "raza": "Comun Europeo", "peso": 4.5,
+             "sexo": "Macho", "fecha_nacimiento": date(2022, 1, 20)},
+        ],
+    },
+    {
+        "nombre": "Juan Perez",
+        "telefono": "1177889900",
+        "email": "juan.perez@example.com",
+        "notas": "Prefiere turnos a la manana; autorizo cumpleanios",
+        "acepta_cumpleanos": True,
+        "mascotas": [
+            {"nombre": "Max", "especie": "Perro", "raza": "Bulldog Frances", "peso": 12.0,
+             "sexo": "Macho", "fecha_nacimiento": date(2021, 9, 14)},
+        ],
+    },
+    {
+        "nombre": "Sofia Alvarez",
+        "telefono": "1188996677",
+        "email": "sofia.alvarez@example.com",
+        "notas": "Cliente nueva, mascota rescatada; autorizo cumpleanios",
+        "acepta_cumpleanos": True,
+        "mascotas": [
+            {"nombre": "Nala", "especie": "Perro", "raza": "Mestiza", "peso": 22.0,
+             "sexo": "Hembra", "fecha_nacimiento": date(2020, 3, 30)},
+        ],
+    },
+    {
+        "nombre": "Pedro Gutierrez",
+        "telefono": "1155667788",
+        "email": "pedro.gutierrez@example.com",
+        "notas": "Trae gato y caniche toy",
+        "mascotas": [
+            {"nombre": "Peluche", "especie": "Gato", "raza": "Siames", "peso": 4.0,
+             "sexo": "Macho", "fecha_nacimiento": date(2024, 7, 19)},
+            {"nombre": "Kiwi", "especie": "Perro", "raza": "Caniche Toy", "peso": 3.5,
+             "sexo": "Hembra", "fecha_nacimiento": date(2023, 11, 2)},
         ],
     },
 ]
 
-# El turno 1 y 2 generan AtencionHistorial (monto cobrado); el 3 no.
+# El turno 1 y 2 generan AtencionHistorial (monto cobrado); el resto no.
+# Los indices referencian CLIENTES_DATA (0..6) y su lista de mascotas.
 TURNOS_DATA = [
     {"cliente_idx": 0, "mascota_idx": 0, "servicio_idx": 0, "hora": time(10, 0),
      "estado": "Finalizado", "crea_atencion": True},
     {"cliente_idx": 1, "mascota_idx": 0, "servicio_idx": 0, "hora": time(12, 0),
      "estado": "Confirmado", "crea_atencion": True},
     {"cliente_idx": 2, "mascota_idx": 0, "servicio_idx": 1, "hora": time(15, 0),
+     "estado": "Pendiente", "crea_atencion": False},
+    {"cliente_idx": 3, "mascota_idx": 0, "servicio_idx": 0, "hora": time(11, 0),
+     "estado": "Confirmado", "crea_atencion": False},
+    {"cliente_idx": 4, "mascota_idx": 0, "servicio_idx": 1, "hora": time(14, 0),
      "estado": "Pendiente", "crea_atencion": False},
 ]
 
@@ -268,6 +322,7 @@ def _seed_demo(session, comercio) -> list[str]:
                 "nombre": c_data["nombre"],
                 "telefono": c_data["telefono"],
                 "notas": c_data["notas"],
+                "acepta_cumpleanos": c_data.get("acepta_cumpleanos", False),
                 "activo": True,
             },
         )
@@ -365,7 +420,7 @@ def main() -> None:
                     {"usuario_id": usuario.id},
                     {
                         "nombre": os.environ.get("ALPHA_CLIENTE_NOMBRE", "Cliente Alpha"),
-                        "telefono": "",
+                        "telefono": os.environ.get("ALPHA_CLIENTE_TELEFONO", ""),
                         "email": email,
                         "comercio_id": comercio_id,
                         "activo": True,

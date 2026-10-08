@@ -9,6 +9,20 @@ from app.models.turno import Turno
 router = APIRouter(tags=["Portal Publico"])
 templates = get_templates()
 
+
+@router.get("/portal/login", response_class=HTMLResponse)
+def portal_login_form(request: Request):
+    """Login publico del portal de clientes (alias de `/cliente/login`).
+
+    Necesita un usuario con rol CLIENTE y su perfil `Cliente` vinculado; el
+    POST va a `/cliente/login`.
+    """
+    return templates.TemplateResponse(
+        request=request,
+        name="cliente/login.html",
+        context={"error": request.query_params.get("error")},
+    )
+
 FASE_LABELS = {
     "ESPERA": "En Espera",
     "BAÑO": "En Baño",
