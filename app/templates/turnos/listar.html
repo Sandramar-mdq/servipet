@@ -241,11 +241,26 @@ const btnNuevo = document.getElementById('btn-nuevo-turno');
 if (btnNuevo) {
     btnNuevo.addEventListener('click', abrirModalNuevo);
 }
+const modalNuevoEl = document.getElementById('modal-nuevo-turno');
+const cardNuevo = modalNuevoEl ? modalNuevoEl.querySelector('.bg-white') : null;
+if (cardNuevo) {
+    cardNuevo.addEventListener('click', function (e) {
+        e.stopPropagation();
+    });
+    cardNuevo.addEventListener('touchstart', function (e) {
+        e.stopPropagation();
+    }, { passive: true });
+}
 document.querySelectorAll('[data-cerrar-modal="nuevo-turno"]').forEach(function (el) {
+    if (el === modalNuevoEl) {
+        el.addEventListener('click', function (e) {
+            if (e.target === el) {
+                cerrarModalNuevo();
+            }
+        });
+        return;
+    }
     el.addEventListener('click', cerrarModalNuevo);
-});
-document.querySelectorAll('[data-cerrar-modal="completar"]').forEach(function (el) {
-    el.addEventListener('click', cerrarModal);
 });
 const ntCliente = document.getElementById('nt-cliente-id');
 const ntMascota = document.getElementById('nt-mascota-id');
