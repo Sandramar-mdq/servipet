@@ -26,11 +26,16 @@
             <input type="date" name="fecha" value="{{ fecha_seleccionada }}"
                 onchange="this.form.submit()"
                 class="border rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+            <input type="hidden" name="vista" value="{{ vista_seleccionada }}">
         </form>
         <span class="w-px h-6 bg-gray-200 mx-1"></span>
-        <a href="/page/turnos?fecha={{ fecha_seleccionada }}" class="px-3 py-1.5 rounded-full text-xs font-bold transition {% if not estado_seleccionado %}bg-indigo-600 text-white{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">Todos</a>
+        <a href="/page/turnos?fecha={{ fecha_seleccionada }}&vista=dia" class="px-3 py-1.5 rounded-full text-xs font-bold transition {% if vista_seleccionada == 'dia' %}bg-indigo-600 text-white{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">Día</a>
+        <a href="/page/turnos?fecha={{ fecha_seleccionada }}&vista=semana" class="px-3 py-1.5 rounded-full text-xs font-bold transition {% if vista_seleccionada == 'semana' %}bg-indigo-600 text-white{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">Semana</a>
+        <a href="/page/turnos?fecha={{ fecha_seleccionada }}&vista=mes" class="px-3 py-1.5 rounded-full text-xs font-bold transition {% if vista_seleccionada == 'mes' %}bg-indigo-600 text-white{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">Mes</a>
+        <span class="w-px h-6 bg-gray-200 mx-1"></span>
+        <a href="/page/turnos?fecha={{ fecha_seleccionada }}&vista={{ vista_seleccionada }}" class="px-3 py-1.5 rounded-full text-xs font-bold transition {% if not estado_seleccionado %}bg-indigo-600 text-white{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">Todos</a>
         {% for e in estados %}
-        <a href="/page/turnos?fecha={{ fecha_seleccionada }}&estado={{ e }}" class="px-3 py-1.5 rounded-full text-xs font-bold transition {% if estado_seleccionado == e %}bg-indigo-600 text-white{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">{{ e }}</a>
+        <a href="/page/turnos?fecha={{ fecha_seleccionada }}&estado={{ e }}&vista={{ vista_seleccionada }}" class="px-3 py-1.5 rounded-full text-xs font-bold transition {% if estado_seleccionado == e %}bg-indigo-600 text-white{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">{{ e }}</a>
         {% endfor %}
     </div>
 </div>
@@ -44,7 +49,15 @@
 
 <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
     <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-        <h2 class="text-base font-bold text-gray-800">Turnos del {{ fecha_seleccionada }}</h2>
+        <h2 class="text-base font-bold text-gray-800">
+            {% if vista_seleccionada == 'semana' %}
+            Turnos del {{ fecha_inicio_rango }} al {{ fecha_fin_rango }}
+            {% elif vista_seleccionada == 'mes' %}
+            Turnos de {{ fecha_inicio_rango }} al {{ fecha_fin_rango }}
+            {% else %}
+            Turnos del {{ fecha_seleccionada }}
+            {% endif %}
+        </h2>
         <span class="bg-indigo-100 text-indigo-700 text-xs font-bold px-2.5 py-1 rounded-full">{{ turnos|length }}</span>
     </div>
     <div class="overflow-x-auto">
@@ -63,7 +76,9 @@
             <tbody>
             {% for t in turnos %}
                 <tr class="border-b border-gray-50 hover:bg-indigo-50/50 transition">
-                    <td class="px-4 py-3 text-sm font-semibold text-gray-800">{{ t.fecha_hora.strftime('%H:%M') }}</td>
+                    <td class="px-4 py-3 text-sm font-semibold text-gray-800 whitespace-nowrap">
+                        {% if vista_seleccionada != 'dia' %}{{ t.fecha_hora.strftime('%d/%m') }} {% endif %}{{ t.fecha_hora.strftime('%H:%M') }}
+                    </td>
                     <td class="px-4 py-3 text-sm text-gray-600">{{ t.cliente.nombre }}</td>
                     <td class="px-4 py-3 text-sm font-medium text-gray-800">{{ t.mascota.nombre }}</td>
                     <td class="px-4 py-3 text-sm text-gray-600">{{ t.servicio.nombre }}</td>
@@ -79,6 +94,7 @@
                             <input type="hidden" name="estado" value="CONFIRMADO">
                             <input type="hidden" name="fecha" value="{{ fecha_seleccionada }}">
                             <input type="hidden" name="estado_filtro" value="{{ estado_seleccionado }}">
+                            <input type="hidden" name="vista" value="{{ vista_seleccionada }}">
                             <button type="submit" class="text-emerald-600 hover:underline font-medium mr-3">Confirmar</button>
                         </form>
                         {% endif %}
@@ -87,6 +103,7 @@
                             <input type="hidden" name="estado" value="CANCELADO">
                             <input type="hidden" name="fecha" value="{{ fecha_seleccionada }}">
                             <input type="hidden" name="estado_filtro" value="{{ estado_seleccionado }}">
+                            <input type="hidden" name="vista" value="{{ vista_seleccionada }}">
                             <button type="submit" class="text-red-600 hover:underline mr-3">Cancelar</button>
                         </form>
                         <button type="button"
@@ -150,6 +167,7 @@
             </div>
             <input type="hidden" name="fecha" value="{{ fecha_seleccionada }}">
             <input type="hidden" name="estado_filtro" value="{{ estado_seleccionado }}">
+            <input type="hidden" name="vista" value="{{ vista_seleccionada }}">
             <div class="flex gap-3 pt-1">
                 <button type="button" onclick="cerrarModal()" class="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-300 transition">Cancelar</button>
                 <button type="submit" class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition">Finalizar y guardar</button>
@@ -206,6 +224,7 @@
             </div>
             <input type="hidden" name="fecha_seleccionada" value="{{ fecha_seleccionada }}">
             <input type="hidden" name="estado_filtro" value="{{ estado_seleccionado }}">
+            <input type="hidden" name="vista" value="{{ vista_seleccionada }}">
             <div class="flex gap-3 pt-1">
                 <button type="button" data-cerrar-modal="nuevo-turno" class="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-300 transition">Cancelar</button>
                 <button type="submit" class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition">Crear Turno</button>

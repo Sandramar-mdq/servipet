@@ -1,4 +1,4 @@
-from datetime import date, datetime, time
+from datetime import date, datetime, time, timedelta
 from typing import Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Form, Request
@@ -10,6 +10,7 @@ from app.database import get_db
 from app.dependencies.auth import require_roles, verificar_tenant
 from app.models.atencion import AtencionHistorial
 from app.models.cliente import Cliente
+from app.models.comercio import Comercio
 from app.models.mascota import Mascota
 from app.models.servicio import Servicio
 from app.models.turno import Turno
@@ -23,6 +24,7 @@ templates = get_templates()
 ESTADOS = ["PENDIENTE", "CONFIRMADO", "CANCELADO", "CANCELADO_TARDIO", "FINALIZADO"]
 FASES = ["ESPERA", "BAÑO", "CORTE", "LISTO"]
 MEDIOS_PAGO = ["efectivo", "transferencia", "debito", "credito", "qr"]
+VISTAS = ["dia", "semana", "mes"]
 
 
 def _fecha_filtro(fecha: str | None) -> str:
@@ -35,22 +37,53 @@ def _fecha_filtro(fecha: str | None) -> str:
         return date.today().isoformat()
 
 
+def _vista_filtro(vista: str | None) -> str:
+    if vista in VISTAS:
+        return vista
+    return "dia"
+
+
+def _rango_fechas(fecha_dt: date, vista: str) -> tuple[datetime, datetime]:
+    """Rango [inicio, fin] segun la vista de la agenda.
+
+    Usa hora local (datetime.now / date.today) a proposito, igual que caja
+    y ventas: los reportes diarios se filtran con el dia local.
+    """
+    if vista == "semana":
+        inicio = datetime.combine(fecha_dt, time.min)
+        fin = datetime.combine(fecha_dt + timedelta(days=6), time.max)
+    elif vista == "mes":
+        inicio = datetime.combine(fecha_dt.replace(day=1), time.min)
+        if fecha_dt.month == 12:
+            proximo = fecha_dt.replace(year=fecha_dt.year + 1, month=1, day=1)
+        else:
+            proximo = fecha_dt.replace(month=fecha_dt.month + 1, day=1)
+        fin = datetime.combine(proximo - timedelta(days=1), time.max)
+    else:
+        inicio = datetime.combine(fecha_dt, time.min)
+        fin = datetime.combine(fecha_dt, time.max)
+    return inicio, fin
+
+
 @router.get("/turnos", response_class=HTMLResponse)
 def agenda_turnos(
     request: Request,
     estado: str | None = None,
     fecha: str | None = None,
+    vista: str | None = None,
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(require_roles("ADMIN", "EMPLEADO")),
 ):
     fecha_seleccionada = _fecha_filtro(fecha)
     fecha_dt = date.fromisoformat(fecha_seleccionada)
-    inicio_dia = datetime.combine(fecha_dt, time.min)
-    fin_dia = datetime.combine(fecha_dt, time.max)
+    vista_seleccionada = _vista_filtro(vista)
+    inicio_rango, fin_rango = _rango_fechas(fecha_dt, vista_seleccionada)
 
+    # Sin filtro de estado (o con "todos") la agenda muestra TODOS los
+    # turnos del rango, incluidos CANCELADO y CANCELADO_TARDIO.
     query = db.query(Turno).filter(
-        Turno.fecha_hora >= inicio_dia,
-        Turno.fecha_hora <= fin_dia,
+        Turno.fecha_hora >= inicio_rango,
+        Turno.fecha_hora <= fin_rango,
     )
     estado_seleccionado = ""
     if estado and estado != "todos" and estado in ESTADOS:
@@ -69,6 +102,9 @@ def agenda_turnos(
         "turnos": turnos,
         "estados": ESTADOS,
         "fecha_seleccionada": fecha_seleccionada,
+        "vista_seleccionada": vista_seleccionada,
+        "fecha_inicio_rango": inicio_rango.date().isoformat(),
+        "fecha_fin_rango": fin_rango.date().isoformat(),
         "estado_seleccionado": estado_seleccionado,
         "success": request.query_params.get("success"),
         "error": request.query_params.get("error"),
@@ -84,6 +120,7 @@ def cambiar_estado_turno(
     estado: str = Form(...),
     fecha: str | None = Form(None),
     estado_filtro: str | None = Form(None),
+    vista: str | None = Form(None),
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(require_roles("ADMIN", "EMPLEADO")),
 ):
@@ -98,7 +135,7 @@ def cambiar_estado_turno(
     turno.estado = estado
     db.commit()
     background_tasks.add_task(notification_service.enqueue_cambio_estado, turno.id, estado)
-    qs = _query_params(fecha, estado_filtro)
+    qs = _query_params(fecha, estado_filtro, vista)
     return RedirectResponse(f"/page/turnos?{qs}success=Estado actualizado a {estado}", status_code=303)
 
 
@@ -113,6 +150,7 @@ def completar_turno(
     observaciones: str | None = Form(None),
     fecha: str | None = Form(None),
     estado_filtro: str | None = Form(None),
+    vista: str | None = Form(None),
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(require_roles("ADMIN", "EMPLEADO")),
 ):
@@ -141,7 +179,7 @@ def completar_turno(
     db.add(atencion)
     db.commit()
 
-    qs = _query_params(fecha, estado_filtro)
+    qs = _query_params(fecha, estado_filtro, vista)
     return RedirectResponse(f"/page/turnos?{qs}success=Atencion registrada y turno finalizado", status_code=303)
 
 
@@ -152,6 +190,7 @@ def cambiar_fase_turno(
     fase: str = Form(...),
     fecha: str | None = Form(None),
     estado_filtro: str | None = Form(None),
+    vista: str | None = Form(None),
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(require_roles("ADMIN", "EMPLEADO")),
 ):
@@ -167,17 +206,21 @@ def cambiar_fase_turno(
     if fase_norm == "LISTO":
         background_tasks.add_task(notification_service.enqueue_pet_ready, turno.id)
 
-    qs = _query_params(fecha, estado_filtro)
+    qs = _query_params(fecha, estado_filtro, vista)
     return RedirectResponse(f"/page/turnos?{qs}success=Fase actualizada a {fase_norm}", status_code=303)
 
 
-def _query_params(fecha: str | None, estado_filtro: str | None) -> str:
+def _query_params(fecha: str | None, estado_filtro: str | None, vista: str | None = None) -> str:
     params = []
     if fecha:
         params.append(f"fecha={fecha}")
     if estado_filtro and estado_filtro != "todos":
         params.append(f"estado={estado_filtro}")
+    if vista and vista in VISTAS and vista != "dia":
+        params.append(f"vista={vista}")
     return "&".join(params) + ("&" if params else "")
+
+
 @router.post("/turnos/crear")
 def crear_turno_staff(
     background_tasks: BackgroundTasks,
@@ -189,6 +232,7 @@ def crear_turno_staff(
     observaciones: Optional[str] = Form(None),
     fecha_seleccionada: str | None = Form(None),
     estado_filtro: str | None = Form(None),
+    vista: str | None = Form(None),
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(require_roles("ADMIN", "EMPLEADO")),
 ):
@@ -220,18 +264,16 @@ def crear_turno_staff(
     if fecha_hora < datetime.now():
         return RedirectResponse("/page/turnos?error=No se puede crear un turno en el pasado", status_code=303)
 
-    comercio_id = cliente.comercio_id
-    try:
-        slots = calcular_slots_disponibles(
-            fecha=fecha_hora.date(),
-            servicio_id=servicio.id,
-            comercio_id=comercio_id,
-        )
-        hora_str = fecha_hora.strftime("%H:%M")
-        if hora_str not in [s["hora"] for s in slots]:
-            return RedirectResponse("/page/turnos?error=Horario no disponible", status_code=303)
-    except Exception:
-        pass
+    comercio = db.query(Comercio).filter(Comercio.id == cliente.comercio_id).first()
+    slots = calcular_slots_disponibles(
+        db,
+        comercio,
+        fecha_hora.date(),
+        servicio,
+        comercio_id=cliente.comercio_id,
+    )
+    if fecha_hora.strftime("%H:%M") not in slots:
+        return RedirectResponse("/page/turnos?error=Horario no disponible", status_code=303)
 
     turno = Turno(
         cliente_id=cliente.id,
@@ -251,5 +293,5 @@ def crear_turno_staff(
         pass
 
     redirect_fecha = fecha_seleccionada or fecha
-    qs = _query_params(redirect_fecha, estado_filtro)
+    qs = _query_params(redirect_fecha, estado_filtro, vista)
     return RedirectResponse(f"/page/turnos?{qs}success=Turno creado correctamente", status_code=303)
