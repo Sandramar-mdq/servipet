@@ -19,6 +19,7 @@ from app.models.servicio import Servicio
 from app.models.turno import Turno
 from app.services.caja import abrir_caja, cerrar_caja, registrar_movimiento
 from app.services.dashboard import metricas, resumen_dia
+from app.services import marketing_service
 from app.services.ventas import crear_venta as crear_venta_svc
 
 router = APIRouter(prefix="/page", tags=["Pages"])
@@ -175,6 +176,26 @@ def eliminar_cliente_form(cliente_id: int, db: Session = Depends(get_db)):
 
 # ── Mascotas ──────────────────────────────────────────────
 
+def _parsear_fecha_nacimiento(valor: Optional[str]):
+    """Convierte `YYYY-MM-DD` del `<input type=date>` en `date`, o None si vacio/invalido."""
+    if not valor:
+        return None
+    try:
+        return datetime.strptime(valor.strip(), "%Y-%m-%d").date()
+    except (ValueError, AttributeError):
+        return None
+
+
+def _edad_desde_entrada(edad: Optional[str], fecha_nacimiento):
+    """Edad a guardar: con fecha de nacimiento se calcula; si no, se respeta el entero manual."""
+    if fecha_nacimiento is not None:
+        return marketing_service.edad_actual(fecha_nacimiento)
+    try:
+        return int(edad) if edad else None
+    except (TypeError, ValueError):
+        return None
+
+
 @router.get("/mascotas", response_class=HTMLResponse)
 def page_mascotas(request: Request, db: Session = Depends(get_db)):
     mascotas_raw = db.query(Mascota).filter(Mascota.activo == True).all()
@@ -236,6 +257,7 @@ def page_mascota_detalle(mascota_id: int, request: Request, db: Session = Depend
             "mascota": mascota,
             "cliente": cliente,
             "atenciones": atenciones,
+            "edad_calculada": marketing_service.edad_actual(mascota.fecha_nacimiento),
         },
     )
 
@@ -263,15 +285,19 @@ def crear_mascota_form(
     peso: Optional[str] = Form(None),
     edad: Optional[str] = Form(None),
     sexo: Optional[str] = Form(None),
+    fecha_nacimiento: Optional[str] = Form(None),
     observaciones: Optional[str] = Form(None),
     alergias: Optional[str] = Form(None),
     foto_webp: Optional[str] = Form(None),
     db: Session = Depends(get_db),
 ):
+    fecha = _parsear_fecha_nacimiento(fecha_nacimiento)
+    edad_final = _edad_desde_entrada(edad, fecha)
     mascota = Mascota(
         cliente_id=cliente_id, nombre=nombre,
         especie=especie, raza=raza, peso=float(peso) if peso else None,
-        edad=int(edad) if edad else None, sexo=sexo,
+        edad=edad_final, sexo=sexo,
+        fecha_nacimiento=fecha,
         observaciones=observaciones, alergias=alergias,
         foto_webp=foto_webp,
     )
@@ -289,6 +315,7 @@ def actualizar_mascota_form(
     peso: Optional[str] = Form(None),
     edad: Optional[str] = Form(None),
     sexo: Optional[str] = Form(None),
+    fecha_nacimiento: Optional[str] = Form(None),
     observaciones: Optional[str] = Form(None),
     alergias: Optional[str] = Form(None),
     foto_webp: Optional[str] = Form(None),
@@ -296,12 +323,14 @@ def actualizar_mascota_form(
 ):
     mascota = db.query(Mascota).filter(Mascota.id == mascota_id).first()
     if mascota:
+        fecha = _parsear_fecha_nacimiento(fecha_nacimiento)
         mascota.nombre = nombre
         mascota.especie = especie
         mascota.raza = raza
         mascota.peso = float(peso) if peso else None
-        mascota.edad = int(edad) if edad else None
+        mascota.edad = _edad_desde_entrada(edad, fecha)
         mascota.sexo = sexo
+        mascota.fecha_nacimiento = fecha
         mascota.observaciones = observaciones
         mascota.alergias = alergias
         mascota.foto_webp = foto_webp

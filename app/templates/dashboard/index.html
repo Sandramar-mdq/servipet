@@ -47,6 +47,19 @@
         </div>
     </div>
 
+    <div class="flex items-center gap-1 mb-4" role="tablist" aria-label="Ventana de cumpleaños">
+        <button type="button" id="tab-cumple-hoy" data-dias="1" role="tab"
+                aria-selected="false" aria-controls="cumple-lista"
+                class="tab-cumpleanos text-sm px-4 py-2 rounded-xl border border-gray-300 text-gray-500 hover:bg-gray-50 transition">
+            Hoy
+        </button>
+        <button type="button" id="tab-cumple-semana" data-dias="7" role="tab"
+                aria-selected="true" aria-controls="cumple-lista"
+                class="tab-cumpleanos text-sm px-4 py-2 rounded-xl border text-[var(--texto-sobre-primario)] bg-[var(--color-primario)] border-transparent shadow-sm">
+            Esta Semana
+        </button>
+    </div>
+
     <div id="cumple-cargando" class="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 flex items-center justify-center gap-3 text-gray-400 text-sm">
         <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>

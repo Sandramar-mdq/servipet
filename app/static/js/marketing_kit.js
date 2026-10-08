@@ -170,6 +170,17 @@
         pintarPreview();
     });
 
+    // Prefill desde el dashboard de cumpleanos (`/page/marketing?titulo=...&beneficio=...`).
+    try {
+        var params = new URLSearchParams(window.location.search);
+        var prefillTitulo = (params.get('titulo') || '').trim();
+        var prefillBeneficio = (params.get('beneficio') || '').trim();
+        if (prefillTitulo) campos.titulo.value = prefillTitulo;
+        if (prefillBeneficio) campos.beneficio.value = prefillBeneficio;
+    } catch (e) {
+        // Sin soporte de URLSearchParams (navegador viejo): se ignora el prefill.
+    }
+
     // El preview escala con el ancho del contenedor (container queries).
     if (previewContenedor && 'containerType' in previewContenedor.style) {
         previewContenedor.style.containerType = 'inline-size';

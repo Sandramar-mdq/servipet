@@ -92,6 +92,21 @@ def anios_cumplidos(fecha_nacimiento: date, aniversario: date) -> int:
     return aniversario.year - fecha_nacimiento.year
 
 
+def edad_actual(fecha_nacimiento: date | None, hoy: date | None = None) -> int | None:
+    """Edad en anios cumplidos a la fecha `hoy` (por defecto hoy local).
+
+    Reutiliza la convencion de aniversarios del modulo de cumpleanos (29-feb ->
+    28-feb), de modo que la edad mostrada y la que se festeja nunca se
+    contradicen. Devuelve `None` si no hay fecha de nacimiento.
+    """
+    if fecha_nacimiento is None:
+        return None
+    hoy = hoy or date.today()
+    if aniversario_en(fecha_nacimiento, hoy.year) <= hoy:
+        return hoy.year - fecha_nacimiento.year
+    return hoy.year - fecha_nacimiento.year - 1
+
+
 def _dias_ventana(hoy: date, dias: int) -> list[date]:
     """Lista de fechas de la ventana [hoy, hoy + dias] inclusive."""
     return [hoy + timedelta(days=i) for i in range(dias + 1)]
@@ -261,10 +276,13 @@ def proximos_cumpleanos(
         beneficio = None
         if comercio is not None:
             beneficio = comercio.beneficio_cumpleanos
+        cliente = mascota.cliente
         items.append(
             {
                 "mascota_id": mascota.id,
                 "cliente_id": mascota.cliente_id,
+                "cliente_nombre": cliente.nombre if cliente is not None else "—",
+                "cliente_telefono": cliente.telefono if cliente is not None else None,
                 "nombre": mascota.nombre,
                 "especie": mascota.especie,
                 "raza": mascota.raza,

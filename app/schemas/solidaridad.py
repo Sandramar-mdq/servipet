@@ -51,6 +51,8 @@ class ConfigCumpleanosResponse(BaseModel):
 class CumpleanosItem(BaseModel):
     mascota_id: int
     cliente_id: int
+    cliente_nombre: str
+    cliente_telefono: str | None = None
     nombre: str
     especie: str | None = None
     raza: str | None = None

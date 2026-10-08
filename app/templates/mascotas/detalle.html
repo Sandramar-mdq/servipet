@@ -55,7 +55,17 @@
             </div>
             <div>
                 <span class="text-gray-400 block text-xs uppercase tracking-wide mb-1">Edad</span>
-                <span class="font-medium text-gray-800">{{ mascota.edad ~ ' años' if mascota.edad else '—' }}</span>
+                {% if edad_calculada is not none %}
+                <span class="font-medium text-gray-800">{{ edad_calculada ~ ' años' }}</span>
+                {% elif mascota.edad %}
+                <span class="font-medium text-gray-800">{{ mascota.edad ~ ' años' }}</span>
+                {% else %}<span class="font-medium text-gray-800">—</span>{% endif %}
+            </div>
+            <div>
+                <span class="text-gray-400 block text-xs uppercase tracking-wide mb-1">Fecha de nacimiento</span>
+                {% if mascota.fecha_nacimiento %}
+                <span class="font-medium text-gray-800">{{ mascota.fecha_nacimiento.strftime('%d/%m/%Y') }}</span>
+                {% else %}<span class="font-medium text-gray-800">—</span>{% endif %}
             </div>
             <div>
                 <span class="text-gray-400 block text-xs uppercase tracking-wide mb-1">Responsable</span>
